@@ -50,7 +50,8 @@ docs/                                   orchestrator
 drizzle/                                F (C, S, G may add migrations — see "Schema changes")
 src/
   instrumentation.ts                    F (C fills job registration)
-  middleware.ts                         F  device-id cookie `kti_device` (random, httpOnly, 1y)
+  proxy.ts                              F  device-id cookie `kti_device` (random, httpOnly, 1y). Next 16 renamed
+                                           middleware.ts → proxy.ts (Node runtime); same role.
   lib/                                  isomorphic, no server-only imports
     contracts.ts                        F  shared DTOs — frozen after F; changes via docs/changes
     pricing.ts                          F  min price, titles, rounding (pure, integer cents)
@@ -301,6 +302,69 @@ Tables exactly as in the PRD "Data model" section, plus:
 Schema changes after F: a workstream that needs a new column/table adds it to `schema.ts` **only in a
 clearly delimited section headed with its workstream letter** and generates a new migration file. The
 orchestrator resolves migration ordering at merge time.
+
+Columns F added beyond the PRD (all nullable or defaulted): `reservations.paying_at` (reconcile job),
+`reservations.source` (`button|tryon|reclaim`), `reservations.reign_id` (set on completion),
+`created_at`/`updated_at` on most tables, `customers.alert_opt_in_at` (consent timestamp),
+`payments.card_country` (VAT evidence), `email_log.throne_id` (15-minute overthrow limit per throne).
+Drizzle uses `casing: "snake_case"`: TS fields are camelCase, SQL columns snake_case. Enum-like columns are
+`text` typed with the unions from `contracts.ts` (no DB enums, so new values need no migration).
+
+### DB access (`src/server/db/client.ts`)
+
+```ts
+export type Database;                 // Drizzle PgDatabase with the full schema (same API on pg and PGlite)
+export type Tx;                       // the `tx` inside db.transaction(async (tx) => …)
+export type DbOrTx = Database | Tx;
+export function getDb(): Promise<Database>;          // migrated + seeded on first call; globalThis singleton
+export function createTestDb(): Promise<Database>;   // fresh in-memory PGlite, migrated + seeded
+export function setTestDb(db: Database | null): void; // route getDb() to a test db
+export function closeDb(): Promise<void>;
+```
+
+There is no synchronous `db` export: migrations run on first use, so callers `const db = await getDb()`.
+**Inside a transaction use only `tx`.** PGlite is one connection that queues every query behind the open
+transaction (that is what makes concurrent transactions serialize — proven by `src/server/db/db.test.ts`,
+50 concurrent `FOR UPDATE` + insert → 1 row, 49 unique violations), so touching the outer db inside a
+transaction would deadlock; the PGlite client throws `Use the transaction's tx` instead. Do side effects
+(notifications, broadcasts) after the transaction resolves.
+
+### Next.js 16 notes
+
+- Cache Components is **off** (`next.config.ts`). Pages that read the DB call `await connection()` from
+  `next/server` so they render per request and never at build time. Route handlers are dynamic by default.
+- `serverExternalPackages: ["@electric-sql/pglite", "pg"]`. `src/instrumentation.ts` skips work during
+  `next build` (`NEXT_PHASE === "phase-production-build"`); never open the DB at build time — `next dev` and
+  `next build` must not share `.data/pglite` concurrently.
+
+### Extra F helpers (beyond the signatures above)
+
+- `pricing.ts`: `PricingConfig`, `DEFAULT_PRICING`, `DAY_MS`, `nextTitle(title)`, `isValidAmount(amount, min, cfg?)`,
+  `utcDateKey(d)`, `nextUtcMidnight(now)`. `minPriceCents` does not clamp to `maxCents` (C decides what to do
+  if the minimum ever exceeds the cap).
+- `crest.ts`: `crestHash(s)`, `crestGroup(name, { idPrefix })` (inner `<g>` for the throne backrest). The
+  initial `<text>` has class `crest-initial`; `globals.css` maps it to the blackletter font.
+- `format.ts`: `article(word)`, `truncateName(name, 16)`. `formatMoney` uses the runtime locale unless
+  `locale` is given — pass one for server-rendered text that must hydrate identically.
+- `copy.ts`: `copy` object (shared strings + `copy.ui` / `copy.safety` / `copy.growth` sections for U/S/G)
+  and `fill(template, vars)` for `{placeholder}` strings.
+- `normalize.ts`: `normalizeText`, `hasCombiningAbuse`, `textLength` (code points).
+- `server/clock.ts`: `now()`, `nowMs()`, `setNow()`, `advance()`, `resetClock()`.
+- `server/config.ts`: `getConfig(): Promise<AppConfig>` (keys and defaults in `config-defaults.ts`),
+  `updateConfig(patch, actor)`, `invalidateConfigCache()`, `pricingConfig(cfg)`.
+- `server/bus.ts`: `publish(throne, event)`, `subscribe(throne, listener) → unsubscribe`, `listenerCount(throne)`.
+  `reservation.result` is published on the throne channel; the SSE route forwards it only to the owner.
+- `server/hash.ts`: `saltedHash`, `hashIp`, `hashDevice`, `hashEmail`, `hashBanValue(kind, value)`,
+  `hashToken` (reservation tokens), `randomToken`, `safeEqual`, `signToken(purpose, payload, ttlMs)`,
+  `verifyToken(purpose, token)`.
+- `server/http.ts`: `json`, `apiError`, `HttpError`, `withErrors(handler)`, `readJson`, `clientIp`,
+  `getCookie`, `deviceId`, `checkOrigin` / `assertOrigin`.
+- `server/payments/provider.ts`: `IntentStatus` (the `retrieve` status union), `paymentMode()`,
+  `setPaymentProvider()` (tests). `FakePaymentProvider` adds `authorize(id)` / `decline(id)` for
+  `/api/dev/fake-pay`.
+- `server/throne/state.ts` (C): F's version is DB-backed and tested (`isThroneId`, `THRONE_IDS`, `toReignDTO`,
+  `utcDayStart` also exported). `getReign` blanks name/proclamation of hidden reigns. `watching` currently
+  uses `listenerCount(throne)` from the bus.
 
 ## Correctness rules (C owns, everyone respects)
 

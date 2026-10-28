@@ -1,0 +1,20 @@
+services:
+  postgres:
+    image: postgres:17
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: throne
+      POSTGRES_PASSWORD: throne
+      POSTGRES_DB: throne
+    ports:
+      - "5432:5432"
+    volumes:
+      - throne-pg:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U throne -d throne"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  throne-pg:
