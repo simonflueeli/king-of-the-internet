@@ -241,11 +241,22 @@ export async function heartbeat(id: string, token: string | null): Promise<Reser
   return toReservationStatus(fresh);
 }
 
-/** DELETE: release immediately (active or paying). Idempotent for already-ended reservations. */
+/**
+ * DELETE: release immediately (active, or paying without an authorization). Idempotent for
+ * already-ended reservations; 409 payment_in_progress once the card is authorized.
+ */
 export async function cancelReservation(id: string, token: string | null): Promise<void> {
   const r = await authorizeReservation(id, token);
   if (r.state === "completed") throw new HttpError(409, "completed", copy.core.errCompleted);
   if (!isOpenState(r.state)) return;
+  // Paying with nothing authorized (e.g. after a decline) releases like an active lock. Once the
+  // card is authorized the takeover is being completed; cancelling then would race the crown.
+  if (r.state === "paying" && r.paymentIntentId) {
+    const intent = await getPaymentProvider().retrieve(r.paymentIntentId);
+    if (intent.status === "requires_capture" || intent.status === "succeeded" || intent.status === "processing") {
+      throw new HttpError(409, "payment_in_progress", copy.core.errPaymentInProgress);
+    }
+  }
   const db = await getDb();
   const done = await db.transaction(async (tx) => {
     await lockThrone(tx, r.throneId);

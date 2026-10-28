@@ -33,3 +33,12 @@ clarifications of behaviour other workstreams rely on, or requests for the orche
   `failed/capture_failed`; ban at confirm → `failed/banned`. A declined card keeps the reservation
   `paying` with `failReason: "card_declined"` until it expires (buyer may try another card; calling
   confirm again is allowed while the intent is not yet authorized).
+
+## Status after integration (merged main)
+
+- Request 1 (card fields on `retrieve`) — **applied**: `IntentSnapshot` in `provider.ts`, fake and
+  Stripe fill `cardFingerprint` / `cardCountry`; crown checks card bans before capture and stores
+  `payments.card_country`. ARCHITECTURE updated.
+- DELETE now answers 409 `payment_in_progress` once the card is authorized (releasing then would race
+  the crown); a `paying` reservation without an authorization is released as before (U.md 3).
+- S2 (retention), S3 (`reigns.disputed`), G1–G3 and U10 applied by the integrator.

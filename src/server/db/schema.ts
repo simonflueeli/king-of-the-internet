@@ -69,6 +69,7 @@ export const reigns = pgTable(
     endReason: text().$type<EndReason>(),
     hidden: boolean().notNull().default(false),
     blurred: boolean().notNull().default(false), // 3+ reports pending
+    disputed: boolean().notNull().default(false), // a chargeback was opened on its payment (current or ended reign)
     paymentId: uuid().references(() => payments.id),
     createdAt: createdAt(),
   },
@@ -153,7 +154,9 @@ export const emailLog = pgTable(
     throneId: text().$type<ThroneId>(),
     reignId: uuid(),
     providerMessageId: text(),
-    status: text().notNull(), // sent | dropped | failed
+    // sending (row written before the provider call) → sent | failed; dropped = swallowed by the
+    // 15-minute overthrow limit. Overthrow rows carry the id of the overthrown reign.
+    status: text().notNull(),
     sentAt: ts().notNull().defaultNow(),
   },
   (t) => [index("email_log_customer_type_sent_idx").on(t.customerId, t.type, t.sentAt)],

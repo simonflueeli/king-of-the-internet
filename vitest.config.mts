@@ -8,6 +8,7 @@ export default defineConfig({
   test: {
     environment: "node",
     include: ["src/**/*.test.ts", "tests/**/*.test.ts"],
+    exclude: ["**/node_modules/**", ".claude/**", ".next/**", ".data/**"],
     // PGlite instances boot in ~1 s each; give DB tests room on slow machines.
     testTimeout: 30_000,
     hookTimeout: 60_000,

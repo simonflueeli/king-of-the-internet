@@ -1,0 +1,1 @@
+ALTER TABLE "reigns" ADD COLUMN "disputed" boolean DEFAULT false NOT NULL;

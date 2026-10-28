@@ -12,6 +12,9 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Local tooling and data: other sessions' worktrees, PGlite files, build output.
+    ".claude/**",
+    ".data/**",
   ]),
 ]);
 

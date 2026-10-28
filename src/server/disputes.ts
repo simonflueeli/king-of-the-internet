@@ -2,7 +2,7 @@
 // dispatches charge.dispute.created / charge.dispute.closed / charge.refunded here (after its
 // stripe_events idempotency check). Handlers are also safe to run twice.
 //
-//   dispute created → payment disputed; if the reign is current, remove the king (reason
+//   dispute created → payment disputed, reign.disputed = true; if the reign is current, remove the king (reason
 //                     "disputed"); ban card fingerprint + email. The price stays where it is (AC-18).
 //   dispute closed  → payment status dispute_won / dispute_lost / …
 //   charge refunded → payment refunded_cents/status; a refund of the current reign removes the king.
@@ -90,6 +90,9 @@ export async function handleDisputeCreated(event: Stripe.Event): Promise<void> {
 
   const reign = await reignForPayment(payment);
   if (reign) {
+    // The flag marks the reign whether it is current or already ended (end_reason stays as it was
+    // for an ended reign).
+    if (!reign.disputed) await db.update(reigns).set({ disputed: true }).where(eq(reigns.id, reign.id));
     // Only removes when that reign is still current; last_paid_cents/crowned_at stay untouched.
     await removeCurrentKing(reign.throneId, {
       reason: "disputed",

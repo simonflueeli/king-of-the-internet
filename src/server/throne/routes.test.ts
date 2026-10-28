@@ -15,7 +15,8 @@ import { GET as reignsGET } from "@/app/api/thrones/[throne]/reigns/route";
 import { POST as reservePOST } from "@/app/api/thrones/[throne]/reservations/route";
 import { GET as throneGET } from "@/app/api/thrones/[throne]/route";
 import { POST as webhookPOST } from "@/app/api/webhooks/stripe/route";
-import { payments, reigns } from "../db/schema";
+import { moderationChecks, payments, reigns } from "../db/schema";
+import { setPolicyClassifier } from "../moderation";
 import { watchingCount } from "./presence";
 import { confirmBody, count, setupKit, teardownKit, type Kit } from "./testkit";
 
@@ -30,11 +31,19 @@ const BASE = "http://localhost:3000";
 let kit: Kit;
 let ipN = 0;
 
+// Real moderation (S) with a fake policy classifier that allows everything, so these tests run the
+// regex / banned-terms rules and the moderation_checks log without an LLM.
+const allowAll = { model: "fake-allow", classify: async () => ({ decision: "allow" as const }) };
+
 beforeEach(async () => {
   kit = await setupKit();
+  setPolicyClassifier(allowAll);
   mocks.onTakeoverCommitted.mockClear();
 });
-afterEach(() => teardownKit());
+afterEach(() => {
+  setPolicyClassifier(null);
+  teardownKit();
+});
 
 const params = <T extends Record<string, string>>(p: T) => ({ params: Promise.resolve(p) });
 
@@ -114,9 +123,21 @@ describe("HTTP flow (fake mode)", () => {
     expect(bad.status).toBe(422);
     expect(await bad.json()).toMatchObject({ error: "amount", minCents: 200, message: "Enter a price between €2.00 and €1,000,000." });
 
+    // S's real rules run: a link in the name is rejected with a category, and every check is logged.
+    const link = await confirmPOST(post(`/api/reservations/${r.reservationId}/confirm`, confirmBody(15_000, "visit spam.example.com", { email: "max@example.com" }), tok), params({ id: r.reservationId }));
+    expect(link.status).toBe(422);
+    expect(await link.json()).toMatchObject({ error: "moderation", field: "name", category: "links" });
+
     const c = await confirmPOST(post(`/api/reservations/${r.reservationId}/confirm`, confirmBody(15_000, "Max"), tok), params({ id: r.reservationId }));
     expect(c.status).toBe(200);
     expect(await c.json()).toMatchObject({ state: "paying", amountCents: 15_000 });
+
+    expect((await kit.db.select().from(moderationChecks)).map((m) => [m.field, m.result, m.model])).toEqual([
+      ["name", "deny", "none"],
+      ["proclamation", "allow", "none"],
+      ["name", "allow", "fake-allow"],
+      ["proclamation", "allow", "fake-allow"],
+    ]);
 
     const p = await fakePayPOST(post(`/api/dev/fake-pay/${r.reservationId}`, { outcome: "succeed" }, tok), params({ id: r.reservationId }));
     const status = await p.json();
@@ -157,6 +178,40 @@ describe("HTTP flow (fake mode)", () => {
     await confirmPOST(post(`/api/reservations/${d.reservationId}/confirm`, confirmBody(200, "Dee"), dt), params({ id: d.reservationId }));
     const declined = await (await fakePayPOST(post(`/api/dev/fake-pay/${d.reservationId}`, { outcome: "decline" }, dt), params({ id: d.reservationId }))).json();
     expect(declined).toMatchObject({ state: "paying", failReason: "card_declined" });
+
+    // U.md 1: Pay again after a decline → confirm is accepted while paying (new amount, lock kept).
+    const again = await confirmPOST(post(`/api/reservations/${d.reservationId}/confirm`, confirmBody(250, "Dee"), dt), params({ id: d.reservationId }));
+    expect(again.status).toBe(200);
+    expect(await again.json()).toMatchObject({ state: "paying", amountCents: 250, failReason: null });
+    expect(kit.pay.forReservation(d.reservationId)!.amountCents).toBe(250);
+    // U.md 7: GET and DELETE carry X-Reservation-Token.
+    const got = await reservationGET(new Request(`${BASE}/api/reservations/${d.reservationId}`, { headers: dt }), params({ id: d.reservationId }));
+    expect(got.status).toBe(200);
+    // U.md 3: DELETE releases a paying reservation that has nothing authorized.
+    const cancel = await reservationDELETE(
+      new Request(`${BASE}/api/reservations/${d.reservationId}`, { method: "DELETE", headers: { origin: BASE, ...dt } }),
+      params({ id: d.reservationId }),
+    );
+    expect(cancel.status).toBe(204);
+    expect(await (await reservationGET(new Request(`${BASE}/api/reservations/${d.reservationId}`), params({ id: d.reservationId }))).json()).toMatchObject({ state: "released" });
+    expect(kit.pay.forReservation(d.reservationId)!.status).toBe("canceled");
+    expect((await reserve("daily")).res.status).toBe(201);
+  });
+
+  it("DELETE after the card is authorized → 409 payment_in_progress; the takeover still completes", async () => {
+    const { body: r } = await reserve();
+    const tok = { "x-reservation-token": r.reservationToken };
+    await confirmPOST(post(`/api/reservations/${r.reservationId}/confirm`, confirmBody(200, "Committed"), tok), params({ id: r.reservationId }));
+    const intent = kit.pay.forReservation(r.reservationId)!;
+    kit.pay.authorize(intent.id);
+    const del = await reservationDELETE(
+      new Request(`${BASE}/api/reservations/${r.reservationId}`, { method: "DELETE", headers: { origin: BASE, ...tok } }),
+      params({ id: r.reservationId }),
+    );
+    expect(del.status).toBe(409);
+    expect(await del.json()).toMatchObject({ error: "payment_in_progress" });
+    const { handleAuthorized } = await import("./crown");
+    expect((await handleAuthorized(intent.id)).outcome).toBe("crowned");
   });
 
   it("GET /api/config/public", async () => {

@@ -261,7 +261,9 @@ export interface PaymentProvider {
   updateAmount(id: string, amountCents: number, meta?: Record<string, string>): Promise<void>;
   capture(id: string, idempotencyKey: string): Promise<{ chargeId: string | null; feeCents: number | null; cardFingerprint: string | null }>;
   cancel(id: string): Promise<void>;
-  retrieve(id: string): Promise<{ status: "requires_payment_method" | "requires_confirmation" | "requires_action" | "requires_capture" | "succeeded" | "canceled" | "processing"; amountCapturable: number }>;
+  // Card fields are known once a card is authorized: crown checks checkBans({ cardFingerprint }) before
+  // capture (hit → cancel, fail reason "banned") and stores cardCountry in payments.card_country.
+  retrieve(id: string): Promise<{ status: "requires_payment_method" | "requires_confirmation" | "requires_action" | "requires_capture" | "succeeded" | "canceled" | "processing"; amountCapturable: number; cardFingerprint?: string | null; cardCountry?: string | null }>;
   refund(chargeOrIntentId: string, amountCents?: number): Promise<void>;
 }
 export function getPaymentProvider(): PaymentProvider;
@@ -292,6 +294,8 @@ export function formatClock(ms: number): string;       // "2:41"
 Tables exactly as in the PRD "Data model" section, plus:
 
 - `reigns.blurred boolean default false`, `reigns.customer_email_hash` not needed (join via customer_id).
+- `reigns.disputed boolean default false` (migration `0001_reigns_disputed`): set by S's dispute handler
+  for current and ended reigns; a current reign is also removed with `end_reason = disputed`.
 - `admin_credentials` (WebAuthn credential id, public key, counter, admin_user_id), `admin_sessions`
   (id, admin_user_id, expires_at).
 - `analytics_events` (id, name, props jsonb, created_at).

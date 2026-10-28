@@ -2,7 +2,15 @@
 // (manual capture). No network. Authorizations are simulated with authorize()/decline(), which
 // POST /api/dev/fake-pay/{id} calls before running the same code path as the Stripe webhook.
 import { randomToken } from "../hash";
-import type { IntentStatus, PaymentProvider } from "./provider";
+import type { IntentSnapshot, IntentStatus, PaymentProvider } from "./provider";
+
+export interface FakeCard {
+  fingerprint: string;
+  country: string;
+}
+
+/** The "test card" every fake authorization uses unless a test passes another one. */
+export const FAKE_CARD: FakeCard = { fingerprint: "fake_fp_4242", country: "DE" };
 
 export interface FakeIntent {
   id: string;
@@ -15,6 +23,7 @@ export interface FakeIntent {
   refundedCents: number;
   captureKeys: Set<string>;
   lastError: string | null;
+  card: FakeCard | null; // set by authorize()
 }
 
 export class FakePaymentProvider implements PaymentProvider {
@@ -49,6 +58,7 @@ export class FakePaymentProvider implements PaymentProvider {
       refundedCents: 0,
       captureKeys: new Set(),
       lastError: null,
+      card: null,
     });
     return { id, clientSecret };
   }
@@ -63,7 +73,7 @@ export class FakePaymentProvider implements PaymentProvider {
   }
 
   /** Simulate a successful card authorization (Stripe: payment_intent.amount_capturable_updated). */
-  authorize(id: string): FakeIntent {
+  authorize(id: string, card: FakeCard = FAKE_CARD): FakeIntent {
     const intent = this.get(id);
     if (intent.status === "canceled" || intent.status === "succeeded") {
       throw new Error(`cannot authorize a ${intent.status} intent`);
@@ -71,6 +81,7 @@ export class FakePaymentProvider implements PaymentProvider {
     intent.status = "requires_capture";
     intent.amountCapturable = intent.amountCents;
     intent.lastError = null;
+    intent.card = card;
     return intent;
   }
 
@@ -89,14 +100,14 @@ export class FakePaymentProvider implements PaymentProvider {
   async capture(id: string, idempotencyKey: string) {
     const intent = this.get(id);
     if (intent.status === "succeeded" && intent.captureKeys.has(idempotencyKey)) {
-      return { chargeId: intent.chargeId, feeCents: fakeFee(intent.amountCents), cardFingerprint: "fake_fp_4242" };
+      return { chargeId: intent.chargeId, feeCents: fakeFee(intent.amountCents), cardFingerprint: intent.card?.fingerprint ?? null };
     }
     if (intent.status !== "requires_capture") throw new Error(`cannot capture a ${intent.status} intent`);
     intent.status = "succeeded";
     intent.amountCapturable = 0;
     intent.chargeId = `fake_ch_${randomToken(12)}`;
     intent.captureKeys.add(idempotencyKey);
-    return { chargeId: intent.chargeId, feeCents: fakeFee(intent.amountCents), cardFingerprint: "fake_fp_4242" };
+    return { chargeId: intent.chargeId, feeCents: fakeFee(intent.amountCents), cardFingerprint: intent.card?.fingerprint ?? null };
   }
 
   async cancel(id: string) {
@@ -107,9 +118,14 @@ export class FakePaymentProvider implements PaymentProvider {
     intent.amountCapturable = 0;
   }
 
-  async retrieve(id: string) {
+  async retrieve(id: string): Promise<IntentSnapshot> {
     const intent = this.get(id);
-    return { status: intent.status, amountCapturable: intent.amountCapturable };
+    return {
+      status: intent.status,
+      amountCapturable: intent.amountCapturable,
+      cardFingerprint: intent.card?.fingerprint ?? null,
+      cardCountry: intent.card?.country ?? null,
+    };
   }
 
   async refund(chargeOrIntentId: string, amountCents?: number) {

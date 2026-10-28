@@ -85,7 +85,12 @@ describe("fake payments", () => {
     await p.updateAmount(id, 15_000);
     await expect(p.capture(id, "res1")).rejects.toThrow();
     p.authorize(id);
-    expect(await p.retrieve(id)).toEqual({ status: "requires_capture", amountCapturable: 15_000 });
+    expect(await p.retrieve(id)).toEqual({
+      status: "requires_capture",
+      amountCapturable: 15_000,
+      cardFingerprint: "fake_fp_4242",
+      cardCountry: "DE",
+    });
     const first = await p.capture(id, "res1");
     expect(await p.capture(id, "res1")).toEqual(first); // idempotent
     await p.refund(id, 5_000);

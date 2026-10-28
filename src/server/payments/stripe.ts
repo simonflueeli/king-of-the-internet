@@ -9,7 +9,7 @@
 // Not verified against Stripe test mode in this repo (no keys in CI) — type-checked and reviewed only.
 import Stripe from "stripe";
 import type { ThroneId } from "@/lib/contracts";
-import type { IntentStatus, PaymentProvider } from "./provider";
+import type { IntentSnapshot, IntentStatus, PaymentProvider } from "./provider";
 
 const INTENT_STATUSES: readonly IntentStatus[] = [
   "requires_payment_method",
@@ -87,9 +87,16 @@ export class StripePaymentProvider implements PaymentProvider {
     }
   }
 
-  async retrieve(id: string) {
-    const intent = await this.stripe.paymentIntents.retrieve(id);
-    return { status: toIntentStatus(intent.status), amountCapturable: intent.amount_capturable };
+  async retrieve(id: string): Promise<IntentSnapshot> {
+    // The authorized (not yet captured) charge already carries the card details.
+    const intent = await this.stripe.paymentIntents.retrieve(id, { expand: ["latest_charge"] });
+    const card = typeof intent.latest_charge === "object" ? intent.latest_charge?.payment_method_details?.card : null;
+    return {
+      status: toIntentStatus(intent.status),
+      amountCapturable: intent.amount_capturable,
+      cardFingerprint: card?.fingerprint ?? null,
+      cardCountry: card?.country ?? null,
+    };
   }
 
   async refund(chargeOrIntentId: string, amountCents?: number) {

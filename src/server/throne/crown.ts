@@ -11,6 +11,7 @@ import { eq } from "drizzle-orm";
 import type { FailReason, ReservationState, ThroneId } from "@/lib/contracts";
 import { crestHash } from "@/lib/crest";
 import { isValidAmount, titleFor } from "@/lib/pricing";
+import { checkBans } from "../bans";
 import { now as clockNow } from "../clock";
 import { getConfig, pricingConfig } from "../config";
 import { getDb } from "../db/client";
@@ -56,6 +57,10 @@ export async function handleAuthorized(paymentIntentId: string): Promise<CrownOu
     return { outcome: "ignored", reason: `intent_${intent.status}` };
   }
 
+  // Card bans can only be checked once a card is known (after authorization), so before capture.
+  // checkBans reads the DB, so it runs before the transaction opens.
+  const cardBanned = intent.cardFingerprint ? (await checkBans({ cardFingerprint: intent.cardFingerprint })).banned : false;
+
   const cfg = await getConfig();
   const pricing = pricingConfig(cfg);
   const db = await getDb();
@@ -91,6 +96,7 @@ export async function handleAuthorized(paymentIntentId: string): Promise<CrownOu
       return { kind: "rejected", r };
     }
     if (r.state === "active") return reject("failed", "canceled"); // authorized without our confirm
+    if (cardBanned) return reject("failed", "banned");
     if (deadReason(r, cfg, now)) return reject("expired", "outbid");
     if (throne.version !== r.throneVersion) return reject("failed", "outbid");
     if (r.amountCents == null || !r.name || !isValidAmount(r.amountCents, r.minCents, pricing)) {
@@ -125,7 +131,8 @@ export async function handleAuthorized(paymentIntentId: string): Promise<CrownOu
         currency: cfg.currency,
         status: "succeeded",
         feeCents: captured.feeCents,
-        cardFingerprint: captured.cardFingerprint,
+        cardFingerprint: captured.cardFingerprint ?? intent.cardFingerprint ?? null,
+        cardCountry: intent.cardCountry ?? null,
         createdAt: now,
         updatedAt: now,
       })
@@ -192,10 +199,15 @@ export async function handleAuthorized(paymentIntentId: string): Promise<CrownOu
   publishReservationResult(result.r);
   publishReservationUpdated(throne, null, null);
   await broadcastThrone(throne).catch((err) => console.error("[crown] broadcast failed", { throne, err }));
-  // Fire and forget: emails must never delay or break the takeover.
-  void Promise.resolve()
-    .then(() => onTakeoverCommitted({ throne, reignId: result.reignId, previousReignId: result.previousReignId }))
-    .catch((err) => console.error("[crown] onTakeoverCommitted failed", { reignId: result.reignId, err }));
+  // Fire and forget: emails must never delay or break the takeover. Started synchronously (G queues
+  // the work in the background and returns), so flushNotifications() right after sees it.
+  try {
+    onTakeoverCommitted({ throne, reignId: result.reignId, previousReignId: result.previousReignId }).catch((err) =>
+      console.error("[crown] onTakeoverCommitted failed", { reignId: result.reignId, err }),
+    );
+  } catch (err) {
+    console.error("[crown] onTakeoverCommitted threw", { reignId: result.reignId, err });
+  }
   return { outcome: "crowned", reservationId: result.r.id, reignId: result.reignId, throne };
 }
 

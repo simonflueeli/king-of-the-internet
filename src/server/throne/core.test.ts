@@ -442,6 +442,24 @@ describe("crown edge cases", () => {
     expect(await count(kit.db, payments)).toBe(0);
   });
 
+  it("C1: a banned card is cancelled before capture; an allowed card's fingerprint and country are stored", async () => {
+    const who = someone();
+    const r = await createReservation("eternal", who);
+    await confirmReservation(r.reservationId, r.reservationToken, confirmBody(200, "Fraud"), who);
+    const intent = kit.pay.forReservation(r.reservationId)!;
+    kit.pay.authorize(intent.id, { fingerprint: "fp_stolen", country: "FR" });
+    mocks.banned = true; // S's checkBans({ cardFingerprint }) answers banned
+    expect(await handleAuthorized(intent.id)).toMatchObject({ outcome: "rejected", state: "failed", failReason: "banned" });
+    expect(intent.status).toBe("canceled");
+    expect(intent.chargeId).toBeNull();
+    expect(await count(kit.db, reigns)).toBe(0);
+
+    mocks.banned = false;
+    await buy(kit, "eternal", "Clean");
+    const [payment] = await kit.db.select().from(payments);
+    expect(payment).toMatchObject({ cardFingerprint: "fake_fp_4242", cardCountry: "DE" });
+  });
+
   it("card declined keeps the reservation paying; a second card then crowns", async () => {
     const who = someone();
     const r = await createReservation("eternal", who);

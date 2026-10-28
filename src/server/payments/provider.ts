@@ -12,13 +12,25 @@ export type IntentStatus =
   | "canceled"
   | "processing";
 
+/**
+ * Snapshot of a PaymentIntent. The card fields are known once a card was authorized (null before,
+ * or when the provider does not report them): crown.ts checks card bans before capturing and
+ * stores the country as VAT evidence.
+ */
+export interface IntentSnapshot {
+  status: IntentStatus;
+  amountCapturable: number;
+  cardFingerprint?: string | null;
+  cardCountry?: string | null; // ISO 3166-1 alpha-2
+}
+
 export interface PaymentProvider {
   mode: PaymentMode;
   createIntent(p: { amountCents: number; reservationId: string; throne: ThroneId }): Promise<{ id: string; clientSecret: string }>;
   updateAmount(id: string, amountCents: number, meta?: Record<string, string>): Promise<void>;
   capture(id: string, idempotencyKey: string): Promise<{ chargeId: string | null; feeCents: number | null; cardFingerprint: string | null }>;
   cancel(id: string): Promise<void>;
-  retrieve(id: string): Promise<{ status: IntentStatus; amountCapturable: number }>;
+  retrieve(id: string): Promise<IntentSnapshot>;
   refund(chargeOrIntentId: string, amountCents?: number): Promise<void>;
 }
 
