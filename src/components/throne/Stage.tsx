@@ -6,6 +6,7 @@ import { formatDuration } from "@/lib/format";
 import { titleFor } from "@/lib/pricing";
 import type { Money } from "./derive";
 import { ThroneSvg } from "./ThroneSvg";
+import { Tnum } from "./Tnum";
 import s from "./throne.module.css";
 
 const THRONE_PATHS: Record<ThroneId, string> = { eternal: "/", daily: "/daily" };
@@ -92,7 +93,9 @@ export function Stage(props: {
       </h1>
       {plate && <p className={s.plate}>{plate}</p>}
       {proclamation}
-      <p className={s.reign}>{reignLine}</p>
+      <p className={s.reign}>
+        <Tnum>{reignLine}</Tnum>
+      </p>
       {king && !preview && (
         <button type="button" className={s.reportLink} onClick={props.onReport} aria-haspopup="dialog">
           {copy.ui.reportLink}

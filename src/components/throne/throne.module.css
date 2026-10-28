@@ -189,7 +189,6 @@
   margin: 1rem 0 0;
   font-size: 0.98rem;
   color: var(--on-stage-soft);
-  font-variant-numeric: tabular-nums;
 }
 .reportLink {
   margin-top: 0.6rem;
@@ -237,7 +236,6 @@
   align-items: center;
   justify-content: center;
   gap: 0.6rem;
-  font-variant-numeric: tabular-nums;
   color: var(--gold-ink);
   border: 1px solid var(--gold-lo);
   background: linear-gradient(180deg, #ffe6a3 0%, #edbc4c 47%, #d69e2c 53%, #e9b848 100%);
@@ -289,7 +287,6 @@
   color: var(--crimson);
   font-weight: 600;
   font-size: 0.95rem;
-  font-variant-numeric: tabular-nums;
 }
 .tryon {
   margin: 1.5rem auto 0;
@@ -334,7 +331,6 @@
   border-radius: 999px;
   padding: 0.35rem 0.8rem;
   font-size: 0.88rem;
-  font-variant-numeric: tabular-nums;
 }
 .pulse svg {
   width: 15px;
@@ -426,7 +422,6 @@
   display: block;
   font-size: 0.76rem;
   color: var(--muted);
-  font-variant-numeric: tabular-nums;
 }
 .titles li.isCurrent {
   background: linear-gradient(180deg, var(--gold-hi), var(--gold));
@@ -476,7 +471,6 @@
   margin: 0;
   font-weight: 600;
   color: var(--accent);
-  font-variant-numeric: tabular-nums;
 }
 .crestSm {
   width: 28px;
@@ -515,13 +509,11 @@
 .rPaid {
   font-weight: 700;
   text-align: right;
-  font-variant-numeric: tabular-nums;
 }
 .rTime {
   grid-column: 2 / -1;
   color: var(--muted);
   font-size: 0.88rem;
-  font-variant-numeric: tabular-nums;
 }
 .rules p {
   margin: 0 0 0.75rem;

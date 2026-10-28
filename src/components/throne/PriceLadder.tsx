@@ -7,6 +7,7 @@ import { TITLE_THRESHOLDS, titleFor, type PricingConfig } from "@/lib/pricing";
 import { stepPercent, type Money } from "./derive";
 import { CHART_H, CHART_W, ladderModel } from "./ladder";
 import s from "./throne.module.css";
+import { Tnum } from "./Tnum";
 
 const ui = copy.ui;
 
@@ -93,7 +94,9 @@ export const PriceLadder = memo(function PriceLadder({
         {TITLE_THRESHOLDS.map((t) => (
           <li key={t.title} className={t.title === current ? s.isCurrent : undefined} aria-current={t.title === current ? "true" : undefined}>
             <span className={s.tName}>{t.title}</span>
-            <span className={s.tFrom}>{fill(ui.titleFrom, { price: money(Math.max(t.minCents, pricing.baseCents), true) })}</span>
+            <span className={s.tFrom}>
+              <Tnum>{fill(ui.titleFrom, { price: money(Math.max(t.minCents, pricing.baseCents), true) })}</Tnum>
+            </span>
           </li>
         ))}
       </ol>
