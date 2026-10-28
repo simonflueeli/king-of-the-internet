@@ -223,13 +223,14 @@ const ATTEMPTS = 2;
 
 /** Send with one retry and record the outcome in email_log (inserting the row unless `logId` is given). */
 async function deliver(db: Database, o: { logId?: string; log: LogFields; msg: EmailMessage }): Promise<void> {
-  const logId =
-    o.logId ??
-    (await db
+  let logId = o.logId;
+  if (!logId) {
+    const [row] = await db
       .insert(emailLog)
       .values({ ...o.log, status: "sending", sentAt: now() })
-      .returning({ id: emailLog.id })
-      .then((r) => r[0].id));
+      .returning({ id: emailLog.id });
+    logId = row!.id;
+  }
   let lastErr: unknown;
   for (let attempt = 1; attempt <= ATTEMPTS; attempt++) {
     try {

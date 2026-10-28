@@ -114,6 +114,8 @@ const growth = {
   shareHiddenTitle: "This reign is no longer shown",
   shareHiddenBody: "It was removed from the throne. The throne itself is still up for grabs.",
   shareHiddenCta: "Go to the throne",
+  shareButton: "Share this reign",
+  shareCopied: "Link copied",
   shareMetaTitle: "{title} {name} on the {throneName}",
   shareMetaDescription: "{title} {name} paid {amount} for the {throneName}. Come and take it from them.",
   shareMetaHiddenDescription: "Put your name on the throne until someone pays at least 10% more.",
