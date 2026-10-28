@@ -64,7 +64,78 @@ const ui = {} as const;
 const safety = {} as const;
 
 /** G: growth, email, share and legal strings. */
-const growth = {} as const;
+const growth = {
+  // Emails (PRD "Notifications and sharing"). Subjects never contain user text.
+  emailFooter: "You’re getting this email because you bought display time on The Throne.",
+  emailSupport: "Questions? Write to {email}.",
+  receiptSubject: "Your receipt: long live {title} {name}",
+  receiptHeading: "Long live {title} {name}",
+  receiptIntro: "You took the {throneLabel}. Here is your receipt.",
+  receiptRows: {
+    throne: "Throne",
+    title: "Title",
+    name: "Name",
+    amount: "Amount paid",
+    date: "Date and time",
+    reference: "Reference",
+  },
+  // Placeholder until VAT setup is decided (PRD "Legal and compliance": VAT on digital services).
+  receiptVatLine: "Price includes VAT where applicable.",
+  receiptReignLink: "See your reign",
+  receiptOutro: "You’re displayed until someone pays at least 10% more. There’s no refund when you’re overthrown.",
+  overthrowBody: "{title} {name} just took your seat on the {throneLabel}. Win it back for {price} before they get comfortable.",
+  overthrowPriceNote: "The price on the throne is always the live minimum, which may have changed since this email was sent.",
+  overthrowUnsubscribe: "Stop overthrow emails",
+  overthrowFooter: "You’re getting this because you asked to be told when someone takes your seat.",
+  removalSubject: "Your reign has ended",
+  removalBody:
+    "Your reign as {title} {name} on the {throneLabel} was ended under our Terms. Reason: {reason}.",
+  removalOutro: "If you think this was a mistake, reply to this email or contact us.",
+  refundSubject: "Your refund is on its way",
+  refundBody: "We’ve refunded {amount} for your reign as {title} {name} on the {throneLabel}.",
+  refundTiming: "Refunds usually appear on your statement within 5–10 business days.",
+  termsLink: "Terms",
+  contactLink: "Contact",
+
+  // Unsubscribe page
+  unsubscribeTitle: "You’re unsubscribed",
+  unsubscribeBody: "We won’t email you when someone takes your seat, on any throne. Receipts still arrive when you buy.",
+  unsubscribeInvalidTitle: "This link doesn’t work",
+  unsubscribeInvalidBody: "The unsubscribe link is invalid or has expired. Contact us and we’ll remove you by hand.",
+  backToThrone: "Back to the throne",
+
+  // Share pages (FR-70, FR-73)
+  shareReigningNow: "Reigning now",
+  shareRuledFor: "Ruled for {duration}",
+  sharePaid: "Paid {amount} for the {throneLabel}",
+  shareCrowned: "Crowned {ago}",
+  shareCtaLive: "Overthrow {name}",
+  shareCtaEnded: "See the {throneLabel}",
+  shareHiddenTitle: "This reign is no longer shown",
+  shareHiddenBody: "It was removed from the throne. The throne itself is still up for grabs.",
+  shareHiddenCta: "Go to the throne",
+  shareMetaTitle: "{title} {name} on the {throneName}",
+  shareMetaDescription: "{title} {name} paid {amount} for the {throneName}. Come and take it from them.",
+  shareMetaHiddenDescription: "Put your name on the throne until someone pays at least 10% more.",
+
+  // OG images
+  ogLongLive: "Long live",
+  ogVacant: "The throne is empty",
+  ogClaimFor: "Claim it for {price}",
+  ogTakeFor: "Overthrow for {price}",
+  ogHidden: "Who will take the throne?",
+
+  // Legal pages
+  legalNav: {
+    terms: "Terms",
+    privacy: "Privacy",
+    imprint: "Imprint",
+    contact: "Contact",
+    refunds: "Refund policy",
+  },
+  legalDraftNotice:
+    "Draft. This page is a placeholder until the operator’s lawyer supplies the final text. Items marked [TO BE SUPPLIED BY LEGAL] are missing.",
+} as const;
 
 export const copy = { ...shared, ui, safety, growth } as const;
 export type Copy = typeof copy;
