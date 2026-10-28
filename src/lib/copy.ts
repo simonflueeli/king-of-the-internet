@@ -61,7 +61,61 @@ const shared = {
 const ui = {} as const;
 
 /** S: safety, moderation and admin strings. */
-const safety = {} as const;
+const safety = {
+  // Moderation messages per category (PRD "Automatic checks"). Never show raw model text.
+  moderation: {
+    links: "Links and contact details aren’t allowed on the throne. Remove them and try again.",
+    banned_term: "That can’t go on the throne. Change it and try again.",
+    hate: "Hateful words and slurs aren’t allowed on the throne. Change it and try again.",
+    harassment: "The throne isn’t for attacking or naming private people. Change it and try again.",
+    sexual: "Sexual content isn’t allowed on the throne. Change it and try again.",
+    violence: "Threats and violence aren’t allowed on the throne. Change it and try again.",
+    self_harm:
+      "That can’t go on the throne. If you’re going through a hard time, please reach out to someone you trust or a local helpline.",
+    impersonation: "You can’t pose as a real public figure or brand on the throne. Choose another name.",
+    spam: "Ads and promotions aren’t allowed on the throne. Change it and try again.",
+    personal_data: "Personal details aren’t allowed on the throne. Remove them and try again.",
+    other: "That can’t go on the throne. Change it and try again.",
+    nameEmpty: "Enter a name for the throne.",
+    nameTooLong: "Names can be at most {max} characters.",
+    proclamationTooLong: "Proclamations can be at most {max} characters.",
+    combiningMarks: "Too many accent marks on one letter. Simplify the text and try again.",
+  },
+  reports: {
+    received: "Thanks. An admin will look at it.",
+    rateLimited: "Too many reports. Try again in 10 minutes.",
+    notFound: "That reign doesn’t exist.",
+    invalid: "Choose a reason for the report.",
+  },
+  bannedBuyer: "You can’t buy the throne.",
+  admin: {
+    title: "Throne admin",
+    signIn: "Sign in with a passkey",
+    devLogin: "Development login",
+    register: "Register a passkey",
+    registerHint: "First time here? Register a passkey with your admin email and the bootstrap token.",
+    notAdmin: "That email isn’t an admin.",
+    badToken: "The bootstrap token is wrong.",
+    signedOut: "Your admin session ended. Sign in again.",
+    passkeyFailed: "The passkey check failed. Try again.",
+    confirmRemove: "Remove {name} from the {throne}? The price stays where it is.",
+    confirmRefund: "Refund {amount} to this buyer? If this is the current reign, the king is removed.",
+    removalCategories: {
+      hate: "Hate or slurs",
+      harassment: "Harassment",
+      sexual: "Sexual content",
+      violence: "Violence or threats",
+      self_harm: "Self-harm",
+      impersonation: "Impersonation",
+      spam: "Spam or ads",
+      personal_data: "Personal data",
+      legal: "Legal request",
+      terms: "Other Terms violation",
+      payment_issue: "Payment issue",
+      other: "Other",
+    },
+  },
+} as const;
 
 /** G: growth, email, share and legal strings. */
 const growth = {} as const;
