@@ -2,7 +2,7 @@ import { eq } from "drizzle-orm";
 import { afterAll, beforeEach, describe, expect, it } from "vitest";
 import type { EndReason, ThroneId } from "@/lib/contracts";
 import { titleFor } from "@/lib/pricing";
-import { formatReignLength } from "@/components/share/format";
+import { formatDuration } from "@/lib/format";
 import { GET as ogReignGET } from "@/app/og/r/[reignId]/route";
 import { resetClock, setNow } from "@/server/clock";
 import { createTestDb, setTestDb, type Database } from "@/server/db/client";
@@ -52,12 +52,12 @@ describe("share page data", () => {
     expect(d.lengthMs).toBe(3_600_000);
   });
 
-  it("ended reign: ruled for 2h 03m", async () => {
+  it("ended reign: ruled for 2h 03m 30s (PRD duration format)", async () => {
     const r = await reign("eternal", "Max", "2026-05-01T08:00:00Z", { endedAt: "2026-05-01T10:03:30Z", endReason: "takeover" });
     const d = await loadShare(r.id);
     if (d?.kind !== "shown") throw new Error("expected shown");
     expect(d.live).toBe(false);
-    expect(formatReignLength(d.lengthMs)).toBe("2h 03m");
+    expect(formatDuration(d.lengthMs)).toBe("2h 03m 30s");
   });
 
   it("daily king from before today's reset is no longer live", async () => {
@@ -65,7 +65,7 @@ describe("share page data", () => {
     const d = await loadShare(r.id);
     if (d?.kind !== "shown") throw new Error("expected shown");
     expect(d.live).toBe(false);
-    expect(formatReignLength(d.lengthMs)).toBe("4h 00m");
+    expect(formatDuration(d.lengthMs)).toBe("4h 00m 00s");
   });
 
   it("FR-73: hidden and removed reigns are not shown and leak no name", async () => {

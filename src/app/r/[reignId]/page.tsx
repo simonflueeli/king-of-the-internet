@@ -5,10 +5,10 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import { copy, fill } from "@/lib/copy";
-import { formatAgo, truncateName } from "@/lib/format";
+import { formatAgo, formatDuration, truncateName } from "@/lib/format";
 import { CrownIcon, LegalLinks, Stage } from "@/components/share/Stage";
 import { ShareButton } from "@/components/share/ShareButton";
-import { formatReignLength, shareMoney } from "@/components/share/format";
+import { shareMoney } from "@/components/share/format";
 import { throneSvg } from "@/components/share/throne-svg";
 import s from "@/components/share/share.module.css";
 import { now } from "@/server/clock";
@@ -97,7 +97,7 @@ export default async function ReignPage({ params }: Props) {
                 {g.shareReigningNow} · {fill(g.shareCrowned, { ago: crownedAgo })}
               </span>
             ) : (
-              fill(g.shareRuledFor, { duration: formatReignLength(data.lengthMs) })
+              fill(g.shareRuledFor, { duration: formatDuration(data.lengthMs) })
             )}
           </p>
         </div>

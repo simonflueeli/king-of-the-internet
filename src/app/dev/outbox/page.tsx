@@ -7,7 +7,7 @@ import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import { getDb } from "@/server/db/client";
 import { customers, emailLog } from "@/server/db/schema";
-import { readOutboxMeta } from "@/server/email/outbox";
+import { readOutboxHtml, readOutboxMeta } from "@/server/email/outbox";
 import { getEmailProvider } from "@/server/email/provider";
 import { simulateOverthrow } from "./actions";
 import s from "./outbox.module.css";
@@ -30,6 +30,9 @@ export default async function OutboxPage({ searchParams }: Props) {
     .limit(100);
   const metas = await Promise.all(rows.map((r) => (r.log.providerMessageId ? readOutboxMeta(r.log.providerMessageId) : null)));
   const selected = selectedId ? await readOutboxMeta(selectedId) : null;
+  // Inline the HTML (srcdoc) instead of framing /dev/outbox/<id>: a sandboxed frame has an opaque
+  // origin, so framing it depends on response headers and breaks with frame-ancestors / XFO.
+  const selectedHtml = selected ? await readOutboxHtml(selected.id) : null;
 
   return (
     <main className={s.page}>
@@ -118,10 +121,13 @@ export default async function OutboxPage({ searchParams }: Props) {
             </dl>
             <iframe
               className={s.frame}
-              src={`/dev/outbox/${selected.id}`}
+              srcDoc={selectedHtml ?? ""}
               title={selected.subject}
               sandbox="allow-popups allow-popups-to-escape-sandbox"
             />
+            <a href={`/dev/outbox/${selected.id}`} target="_blank" rel="noreferrer">
+              Open in a new tab
+            </a>
             <details>
               <summary>Plain text</summary>
               <pre className={s.text}>{selected.text}</pre>
