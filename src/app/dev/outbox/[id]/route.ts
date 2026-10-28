@@ -10,8 +10,8 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
     headers: {
       "content-type": "text/html; charset=utf-8",
       "cache-control": "no-store",
-      // Rendered inside the outbox page's iframe: no scripts, same origin only.
-      "content-security-policy": "script-src 'none'; frame-ancestors 'self'",
+      // Opened directly from /dev/outbox ("Open in a new tab"); emails never need scripts.
+      "content-security-policy": "script-src 'none'",
     },
   });
 }
