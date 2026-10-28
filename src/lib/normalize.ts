@@ -6,7 +6,7 @@
 //   2. Remove control, zero-width, bidi and other invisible characters. Emoji stay: U+200D (ZWJ)
 //      is kept only between emoji, emoji tag sequences (subdivision flags) are kept intact.
 //   3. Collapse whitespace to single spaces and trim.
-//   4. Reject more than 2 combining marks on one base character.
+//   4. Reject more than 2 combining marks on one base character (counted in NFD).
 //   5. Lengths after normalization: name 1–24, proclamation 0–140 (Unicode code points).
 
 // C0/C1 controls (incl. tab/newline — whitespace is collapsed anyway), soft hyphen, Arabic letter
@@ -39,12 +39,17 @@ export function normalizeText(input: string): string {
     .replace(TAG_RE, (m, flag: string | undefined) => flag ?? "")
     .replace(STRAY_ZWJ_RE, "")
     .replace(WHITESPACE_RE, " ")
-    .trim();
+    .trim()
+    .normalize("NFC"); // stripping can bring a base character and its marks back together
 }
 
-/** More than 2 combining marks on one base character ("Zalgo" text). */
+/**
+ * More than 2 combining marks on one base character ("Zalgo" text). Counted on the canonical
+ * decomposition, so a precomposed letter cannot hide one of its marks ("é" + 2 marks = 3).
+ * Vietnamese needs at most 2; polytonic Greek with 3 (e.g. ᾧ) is rejected — acceptable for names.
+ */
 export function hasCombiningAbuse(input: string): boolean {
-  return COMBINING_RUN_RE.test(input);
+  return COMBINING_RUN_RE.test(input.normalize("NFD"));
 }
 
 /** Length in Unicode code points, as used for the name (1–24) and proclamation (0–140) limits. */

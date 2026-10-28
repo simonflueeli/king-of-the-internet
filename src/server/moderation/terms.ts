@@ -44,8 +44,10 @@ export function matchBannedTerm(text: string, terms: readonly string[]): string 
   if (!terms.length) return null;
   const keys = termKeys(text);
   for (const term of terms) {
-    const needle = ` ${term} `;
-    if (needle.trim() && keys.some((k) => k.includes(needle))) return term;
+    if (!term) continue;
+    // multi-word terms also match written together or spelled out ("b a d w o r d" → "badword")
+    const needles = [` ${term} `, ` ${term.replace(/ /g, "")} `];
+    if (keys.some((k) => needles.some((n) => k.includes(n)))) return term;
   }
   return null;
 }
