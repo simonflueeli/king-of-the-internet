@@ -2,15 +2,18 @@
 // - first event is always `throne.updated` (events published meanwhile are queued behind it)
 // - `: ping` comment every 15 s keeps proxies from closing the connection
 // - `reservation.result` is forwarded only when the connection proved it owns that reservation
-// - each open stream counts as one viewer (presence); everything is released on abort / cancel
+// - each open stream counts as one viewer (presence); everything is released on abort, on cancel, on
+//   a failed write, or when the presence sweep finds that nobody reads the stream any more
 import type { ThroneEvent, ThroneId } from "@/lib/contracts";
 import { subscribe } from "../bus";
 import { toReservationStatus, type ReservationRow } from "./common";
-import { joinPresence } from "./presence";
+import { registerConnection } from "./presence";
 import { isOpenState } from "./rules";
 import { getThroneState } from "./state";
 
 export const SSE_PING_MS = 15_000;
+/** Sweeps in a row with unread data before a stream stops counting as a viewer. */
+export const STALE_SWEEPS = 2;
 
 export const SSE_HEADERS: HeadersInit = {
   "content-type": "text/event-stream; charset=utf-8",
@@ -52,7 +55,20 @@ export function openThroneStream(
       };
 
       const unsubscribe = subscribe(throne, send);
-      const leave = joinPresence(throne);
+      // Presence sweep: a live reader drains the queue between sweeps; a backlog that persists over
+      // STALE_SWEEPS consecutive sweeps means nobody reads this response any more (it ended without
+      // an abort or cancel reaching us), so it stops counting as a viewer.
+      let staleSweeps = 0;
+      const leave = registerConnection(throne, {
+        isAlive: () => {
+          if (closed) return false;
+          const desired = controller.desiredSize;
+          if (desired === null) return false; // errored
+          staleSweeps = desired < 0 ? staleSweeps + 1 : 0;
+          return staleSweeps < STALE_SWEEPS;
+        },
+        close: () => cleanup(),
+      });
       const ping = setInterval(() => write(": ping\n\n"), opts.pingMs ?? SSE_PING_MS);
       cleanup = () => {
         if (closed) return;
