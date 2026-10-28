@@ -1,0 +1,1121 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The Throne</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:ital,wght@0,400..900;1,400..900&family=UnifrakturMaguntia&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#EEF0F8; --surface:#FFFFFF; --ink:#141731; --muted:#555A78; --line:#D6D9E8;
+  --accent:#8F620F; --crimson:#9E1F37; --crimson-bg:#F7E3E8; --focus:#1C2878;
+  --stage:#121A5C; --on-stage:#F5F4FB; --on-stage-soft:#BFC4EA;
+  --gold-hi:#FFE7A0; --gold:#E2B04A; --gold-lo:#9C6B12; --gold-ink:#231803; --gold-text:#F2C75C;
+  --ermine:#FFFFFF;
+  --blackletter:"UnifrakturMaguntia","Old English Text MT",Georgia,serif;
+  --sans:"Schibsted Grotesk",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  color-scheme:light;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0A0D28; --surface:#141943; --ink:#ECEBF7; --muted:#A4A8C8; --line:#283068;
+    --accent:#F2C75C; --crimson:#F2869A; --crimson-bg:#35122A; --focus:#F2C75C;
+    --ermine:#E6E5EF;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0A0D28; --surface:#141943; --ink:#ECEBF7; --muted:#A4A8C8; --line:#283068;
+  --accent:#F2C75C; --crimson:#F2869A; --crimson-bg:#35122A; --focus:#F2C75C;
+  --ermine:#E6E5EF;
+  color-scheme:dark;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px);}
+*,*::before,*::after{box-sizing:inherit;}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:1rem;line-height:1.55;-webkit-font-smoothing:antialiased;}
+:focus-visible{outline:3px solid var(--focus);outline-offset:3px;}
+.inner{max-width:40rem;margin:0 auto;padding:0 1.1rem;}
+
+/* ---------- the stage ---------- */
+.stage{
+  position:relative;overflow:hidden;color:var(--on-stage);
+  background:
+    radial-gradient(ellipse 60% 42% at 50% 72%, rgba(255,214,120,.16), rgba(255,214,120,0) 70%),
+    radial-gradient(ellipse 120% 80% at 50% 120%, rgba(0,0,0,.45), rgba(0,0,0,0) 60%),
+    var(--stage);
+  padding-bottom:2.25rem;
+}
+.beam{position:absolute;top:0;left:50%;width:640px;height:78%;transform:translateX(-50%);pointer-events:none;
+  background:linear-gradient(to bottom, rgba(255,226,150,.30), rgba(255,226,150,.06) 70%, rgba(255,226,150,0));
+  clip-path:polygon(41% 0,59% 0,100% 100%,0 100%);}
+header{position:relative;display:flex;align-items:center;justify-content:space-between;gap:.75rem 1rem;flex-wrap:wrap;padding-top:1.1rem;}
+.mark{font-family:var(--blackletter);font-size:1.8rem;line-height:1;color:var(--gold-text);}
+.switch{display:inline-flex;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.16);border-radius:999px;padding:3px;}
+.switch button{font:inherit;font-size:.9rem;font-weight:600;border:0;background:transparent;color:var(--on-stage-soft);padding:.45rem .95rem;border-radius:999px;cursor:pointer;}
+.switch button[aria-pressed="true"]{background:var(--gold);color:var(--gold-ink);}
+.switch button:focus-visible{outline-color:var(--gold-hi);}
+
+.scene{position:relative;text-align:center;padding-top:1.5rem;}
+.preview-badge{position:absolute;top:1.25rem;right:0;background:rgba(255,255,255,.12);border:1px dashed rgba(255,231,160,.6);color:var(--gold-hi);font-size:.8rem;font-weight:700;padding:.25rem .65rem;border-radius:999px;}
+.throne{display:block;width:min(210px,52vw);height:auto;margin:0 auto;filter:drop-shadow(0 18px 30px rgba(0,0,0,.45));}
+.hail{margin:.9rem 0 0;font-size:1.05rem;font-weight:600;color:var(--gold-text);}
+.king{
+  font-family:var(--blackletter);font-weight:400;font-size:clamp(3rem,13vw,6rem);line-height:1.02;margin:.15rem auto .35rem;max-width:100%;overflow-wrap:anywhere;
+  background:linear-gradient(100deg,#C8921E 0%,#F6CF63 30%,#FFF6D2 48%,#F6CF63 66%,#C8921E 100%);
+  background-size:260% 100%;background-position:100% 0;
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 3px 14px rgba(255,200,90,.28));
+  animation:shimmer 7s ease-in-out infinite;
+}
+.king.vacant{background:none;color:rgba(245,244,251,.5);filter:none;animation:none;}
+.scene.is-preview .king{opacity:.92;}
+@keyframes shimmer{0%,55%{background-position:100% 0;}100%{background-position:0% 0;}}
+@keyframes coronation{
+  0%{opacity:0;transform:scale(.85) translateY(10px);}
+  60%{opacity:1;transform:scale(1.05);}
+  100%{transform:scale(1);}
+}
+.king.crowned{animation:coronation 1.1s cubic-bezier(.2,.8,.2,1) both, shimmer 7s ease-in-out infinite;}
+.plate{display:inline-block;margin:0;padding:.3rem .9rem;border-radius:6px;font-weight:700;font-size:.95rem;color:var(--gold-ink);
+  background:linear-gradient(180deg,var(--gold-hi),var(--gold) 55%,#C8921E);box-shadow:0 1px 0 rgba(255,255,255,.5) inset,0 2px 0 var(--gold-lo);}
+.proclamation{margin:1rem auto 0;max-width:30ch;font-style:italic;font-size:1.15rem;line-height:1.5;overflow-wrap:anywhere;}
+.reign{margin:1rem 0 0;font-size:.98rem;color:var(--on-stage-soft);font-variant-numeric:tabular-nums;}
+.hem{height:30px;border-top:3px solid var(--gold);
+  background-color:var(--ermine);
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='44' viewBox='0 0 40 44'%3E%3Cg fill='%2315151B'%3E%3Cg transform='translate(10 4)'%3E%3Ccircle r='1.7'/%3E%3Ccircle cx='-3.1' cy='2.7' r='1.7'/%3E%3Ccircle cx='3.1' cy='2.7' r='1.7'/%3E%3Cpath d='M0 3.2C-2.5 7-2.3 11.5 0 16.5 2.3 11.5 2.5 7 0 3.2Z'/%3E%3C/g%3E%3Cg transform='translate(30 26)'%3E%3Ccircle r='1.7'/%3E%3Ccircle cx='-3.1' cy='2.7' r='1.7'/%3E%3Ccircle cx='3.1' cy='2.7' r='1.7'/%3E%3Cpath d='M0 3.2C-2.5 7-2.3 11.5 0 16.5 2.3 11.5 2.5 7 0 3.2Z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  background-size:34px 37px;background-position:center top;}
+
+/* ---------- call to action ---------- */
+.take{text-align:center;padding-top:1.75rem;}
+.take-btn{font:inherit;font-weight:800;font-size:1.22rem;line-height:1.25;width:100%;max-width:27rem;padding:1.05rem 1.25rem;border-radius:16px;cursor:pointer;
+  display:inline-flex;align-items:center;justify-content:center;gap:.6rem;font-variant-numeric:tabular-nums;
+  color:var(--gold-ink);border:1px solid var(--gold-lo);
+  background:linear-gradient(180deg,#FFE6A3 0%,#EDBC4C 47%,#D69E2C 53%,#E9B848 100%);
+  box-shadow:0 1px 0 rgba(255,255,255,.7) inset,0 6px 0 #835610,0 12px 26px rgba(214,160,50,.38);
+  transition:transform .08s ease, box-shadow .08s ease, filter .15s ease;}
+.take-btn svg{width:26px;height:auto;flex:none;}
+.take-btn:hover:not(:disabled){filter:brightness(1.05) saturate(1.05);}
+.take-btn:active:not(:disabled){transform:translateY(4px);box-shadow:0 1px 0 rgba(255,255,255,.7) inset,0 2px 0 #835610,0 6px 14px rgba(214,160,50,.3);}
+.take-btn:disabled{opacity:.5;cursor:not-allowed;}
+.pitch{margin:1.1rem 0 0;font-size:1.08rem;font-weight:700;}
+.meta{margin:.25rem auto 0;max-width:34rem;color:var(--muted);font-size:.93rem;font-variant-numeric:tabular-nums;}
+.notice{margin:1rem auto 0;max-width:27rem;padding:.7rem .9rem;border-radius:10px;background:var(--crimson-bg);color:var(--crimson);font-weight:600;font-size:.95rem;font-variant-numeric:tabular-nums;}
+.tryon{margin:1.5rem auto 0;max-width:27rem;text-align:left;}
+.tryon label{display:block;font-weight:700;margin:0 0 .35rem;}
+.tryon input{font:inherit;width:100%;padding:.75rem .9rem;border-radius:12px;border:1.5px dashed var(--line);background:var(--surface);color:var(--ink);}
+.tryon input:focus{border-style:solid;border-color:var(--gold);outline:none;box-shadow:0 0 0 3px rgba(226,176,74,.3);}
+.pulse{list-style:none;display:flex;flex-wrap:wrap;justify-content:center;gap:.5rem;padding:0;margin:1.25rem 0 0;}
+.pulse li{display:inline-flex;align-items:center;gap:.45rem;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:.35rem .8rem;font-size:.88rem;font-variant-numeric:tabular-nums;}
+.pulse svg{width:15px;height:15px;color:var(--accent);flex:none;}
+.live-dot{width:8px;height:8px;border-radius:50%;background:#E0364F;box-shadow:0 0 0 3px rgba(224,54,79,.22);flex:none;}
+
+/* ---------- sections ---------- */
+section.block{margin-top:3rem;}
+h2{font-size:1.35rem;font-weight:800;margin:0 0 .5rem;line-height:1.25;}
+h3{font-size:1rem;font-weight:700;margin:1.5rem 0 .5rem;}
+.lede{margin:0 0 1rem;color:var(--muted);max-width:62ch;}
+.chart-wrap{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:.6rem .4rem .2rem;}
+.chart{display:block;width:100%;height:auto;}
+.chart .ct{font-family:var(--sans);font-size:14px;fill:var(--muted);}
+.chart .ct-strong{font-family:var(--sans);font-size:15px;font-weight:800;fill:var(--ink);}
+.chart .ct-gold{font-family:var(--sans);font-size:15px;font-weight:800;fill:var(--accent);}
+.titles{list-style:none;padding:0;margin:1rem 0 0;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:.4rem;}
+.titles li{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:.55rem .3rem;text-align:center;min-width:0;}
+.titles .t-name{display:block;font-weight:800;font-size:.9rem;overflow-wrap:anywhere;}
+.titles .t-from{display:block;font-size:.76rem;color:var(--muted);font-variant-numeric:tabular-nums;}
+.titles li.is-current{background:linear-gradient(180deg,var(--gold-hi),var(--gold));border-color:var(--gold-lo);color:var(--gold-ink);}
+.titles li.is-current .t-from{color:var(--gold-ink);}
+.titles-note{margin:.6rem 0 0;color:var(--muted);font-size:.93rem;}
+
+.records{display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-top:1rem;}
+.record{display:flex;gap:.75rem;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:.85rem .9rem;min-width:0;}
+.record > div{min-width:0;}
+.record .label{font-size:.82rem;color:var(--muted);margin:0;}
+.record .who{font-weight:800;margin:.1rem 0;overflow-wrap:anywhere;line-height:1.25;}
+.record .what{margin:0;font-weight:600;color:var(--accent);font-variant-numeric:tabular-nums;}
+.crest{display:block;flex:none;height:auto;}
+.crest-sm{width:28px;}
+.crest-md{width:42px;}
+.crest-lg{width:64px;}
+.crest-xl{width:110px;margin:0 auto;filter:drop-shadow(0 10px 22px rgba(255,200,90,.35));}
+.rulers{list-style:none;margin:0;padding:0;border-top:1px solid var(--line);}
+.rulers li{display:grid;grid-template-columns:28px 1fr auto;gap:.05rem .75rem;align-items:center;padding:.7rem 0;border-bottom:1px solid var(--line);}
+.rulers .crest-sm{grid-row:1 / span 2;}
+.r-name{font-weight:700;overflow-wrap:anywhere;min-width:0;}
+.r-title{color:var(--muted);font-weight:600;}
+.r-paid{font-weight:700;text-align:right;font-variant-numeric:tabular-nums;}
+.r-time{grid-column:2 / -1;color:var(--muted);font-size:.88rem;font-variant-numeric:tabular-nums;}
+.rules p{margin:0 0 .75rem;max-width:62ch;}
+.mod{padding-top:1.25rem;border-top:1px dashed var(--line);}
+.mod p{margin:0 0 .9rem;color:var(--muted);}
+.mod-actions{display:flex;flex-wrap:wrap;gap:.6rem;}
+.btn-secondary{font:inherit;font-weight:600;background:transparent;color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:.65rem 1rem;cursor:pointer;}
+.btn-secondary:hover:not(:disabled){border-color:var(--muted);}
+.btn-secondary:disabled{opacity:.45;cursor:not-allowed;}
+.btn-danger{color:var(--crimson);border-color:currentColor;}
+.foot{margin:2.5rem 0 2.5rem;color:var(--muted);font-size:.85rem;}
+
+/* ---------- dialog ---------- */
+dialog{border:0;padding:0;border-radius:20px;width:min(30rem,calc(100vw - 1.5rem));max-height:calc(100% - 2rem);overflow:auto;background:var(--surface);color:var(--ink);}
+dialog::backdrop{background:rgba(6,8,30,.7);}
+.sheet{position:relative;padding:1.4rem 1.25rem 1.25rem;}
+.sheet h2{font-size:1.15rem;margin:0 0 .9rem;}
+.co-head{display:flex;align-items:center;gap:.9rem;padding:.9rem;border-radius:14px;background:var(--stage);color:var(--on-stage);}
+.co-kicker{margin:0;font-size:.85rem;color:var(--on-stage-soft);}
+.co-name{margin:0;font-family:var(--blackletter);font-size:1.9rem;line-height:1.1;color:var(--gold-text);overflow-wrap:anywhere;}
+.amount{display:flex;align-items:center;gap:.4rem;border:1.5px solid var(--gold);border-radius:12px;background:var(--bg);padding:0 .9rem;}
+.amount:focus-within{box-shadow:0 0 0 3px rgba(226,176,74,.35);}
+.amount-cur{font-size:1.5rem;font-weight:800;color:var(--accent);}
+.sheet .amount input{flex:1;min-width:0;border:0;background:transparent;padding:.5rem 0;font-size:1.7rem;font-weight:800;font-variant-numeric:tabular-nums;}
+.sheet .amount input:focus{outline:none;}
+.chips{display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.55rem;}
+.chip{font:inherit;display:inline-flex;flex-direction:column;align-items:flex-start;padding:.35rem .7rem;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;line-height:1.25;}
+.chip-label{font-size:.78rem;color:var(--muted);}
+.chip-amount{font-weight:800;font-variant-numeric:tabular-nums;}
+.chip[aria-pressed="true"]{border-color:var(--gold-lo);background:linear-gradient(180deg,var(--gold-hi),var(--gold));color:var(--gold-ink);}
+.chip[aria-pressed="true"] .chip-label{color:var(--gold-ink);}
+.amount-help{margin:.5rem 0 0;font-size:.9rem;color:var(--muted);font-variant-numeric:tabular-nums;}
+.amount-help.is-bad{color:var(--crimson);font-weight:600;}
+.lockline{margin:.3rem 0 0;color:var(--muted);font-size:.85rem;font-variant-numeric:tabular-nums;}
+label.field{display:block;font-weight:600;margin:.9rem 0 .35rem;}
+.sheet input,.sheet textarea{font:inherit;width:100%;padding:.7rem .8rem;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);}
+.sheet textarea{resize:vertical;min-height:4.5rem;}
+.count{font-size:.8rem;color:var(--muted);text-align:right;margin-top:.25rem;font-variant-numeric:tabular-nums;}
+.demo-pay{margin:.9rem 0 0;padding:.75rem .9rem;border-radius:10px;background:var(--bg);font-size:.88rem;color:var(--muted);}
+.error{color:var(--crimson);font-weight:600;margin:.75rem 0 0;}
+.actions{display:flex;flex-direction:column;align-items:stretch;gap:.6rem;margin-top:1.1rem;}
+.actions .take-btn{max-width:none;font-size:1.08rem;}
+
+.sheet.done{text-align:center;color:var(--on-stage);overflow:hidden;
+  background:radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,214,120,.28), rgba(255,214,120,0) 70%), var(--stage);}
+.done .hail{margin-top:.6rem;}
+.done-name{font-family:var(--blackletter);font-weight:400;font-size:clamp(2.2rem,10vw,3.2rem);line-height:1.08;margin:.1rem 0 .6rem;color:var(--gold-text);overflow-wrap:anywhere;}
+.done-text{margin:0 auto;max-width:34ch;color:var(--on-stage-soft);}
+.email-intro{margin:1.2rem 0 .5rem;text-align:left;color:var(--on-stage-soft);font-size:.92rem;}
+.email{text-align:left;border:1px solid rgba(255,255,255,.18);border-radius:12px;overflow:hidden;background:rgba(255,255,255,.05);}
+.email-head{padding:.55rem .9rem;font-size:.84rem;color:var(--on-stage-soft);border-bottom:1px solid rgba(255,255,255,.12);}
+.email-body{padding:.9rem;}
+.email-body p{margin:0;}
+.fake-link{display:inline-block;margin-top:.7rem;padding:.45rem .85rem;background:var(--gold);color:var(--gold-ink);border-radius:8px;font-weight:700;}
+.brag{margin-top:1.1rem;padding:.8rem .9rem;border-radius:12px;background:rgba(255,255,255,.07);text-align:left;}
+.brag p{margin:0 0 .6rem;font-style:italic;}
+.brag button{font:inherit;font-weight:700;background:transparent;color:var(--gold-hi);border:1px solid rgba(255,231,160,.5);border-radius:9px;padding:.45rem .8rem;cursor:pointer;}
+.done .take-btn:focus-visible,.brag button:focus-visible{outline-color:var(--gold-hi);}
+.confetti{position:absolute;inset:0;pointer-events:none;overflow:hidden;}
+.confetto{position:absolute;top:-12px;border-radius:2px;}
+
+@media (max-width: 30rem){
+  .records{grid-template-columns:1fr;}
+  .titles{grid-template-columns:repeat(3,minmax(0,1fr));}
+}
+@media (prefers-reduced-motion: reduce){
+  .king,.king.crowned{animation:none;}
+  .take-btn{transition:none;}
+}
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="beam" aria-hidden="true"></div>
+  <div class="inner">
+    <header>
+      <span class="mark">The Throne</span>
+      <div class="switch" role="group" aria-label="Choose a throne">
+        <button type="button" data-kind="eternal" aria-pressed="true">Eternal throne</button>
+        <button type="button" data-kind="daily" aria-pressed="false">Daily throne</button>
+      </div>
+    </header>
+
+    <div class="scene" id="scene" aria-live="polite">
+      <span class="preview-badge" id="previewBadge" hidden>Preview</span>
+      <svg class="throne" viewBox="0 0 200 230" aria-hidden="true">
+        <defs>
+          <linearGradient id="gGold" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#FFE7A0"/><stop offset=".45" stop-color="#E2B04A"/><stop offset="1" stop-color="#9C6B12"/>
+          </linearGradient>
+          <linearGradient id="gGoldSide" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0" stop-color="#9C6B12"/><stop offset=".5" stop-color="#F3CD6A"/><stop offset="1" stop-color="#9C6B12"/>
+          </linearGradient>
+          <linearGradient id="gVelvet" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#B8304A"/><stop offset="1" stop-color="#6A1024"/>
+          </linearGradient>
+          <radialGradient id="gShadow">
+            <stop offset="0" stop-color="#000" stop-opacity=".5"/><stop offset="1" stop-color="#000" stop-opacity="0"/>
+          </radialGradient>
+        </defs>
+        <ellipse cx="100" cy="219" rx="84" ry="9" fill="url(#gShadow)"/>
+        <rect x="44" y="168" width="14" height="46" rx="3" fill="url(#gGoldSide)"/>
+        <rect x="142" y="168" width="14" height="46" rx="3" fill="url(#gGoldSide)"/>
+        <rect x="39" y="208" width="24" height="9" rx="3" fill="url(#gGold)"/>
+        <rect x="137" y="208" width="24" height="9" rx="3" fill="url(#gGold)"/>
+        <path d="M46 134V60C46 32 70 18 100 13 130 18 154 32 154 60V134Z" fill="url(#gGold)" stroke="#8A5C10" stroke-width="1.5"/>
+        <path d="M57 130V63C57 42 75 31 100 27 125 31 143 42 143 63V130Z" fill="url(#gVelvet)"/>
+        <path d="M57 130V63C57 42 75 31 100 27 125 31 143 42 143 63V130" fill="none" stroke="#FFE7A0" stroke-opacity=".35" stroke-width="1"/>
+        <circle cx="46" cy="52" r="7.5" fill="url(#gGold)" stroke="#8A5C10"/>
+        <circle cx="154" cy="52" r="7.5" fill="url(#gGold)" stroke="#8A5C10"/>
+        <path d="M86 16 90 2 100 10 110 2 114 16Z" fill="url(#gGold)" stroke="#8A5C10"/>
+        <circle cx="100" cy="11" r="2.6" fill="#B8304A"/>
+        <g id="crestSlot" transform="translate(70 42) scale(.6)"></g>
+        <rect x="27" y="138" width="11" height="34" fill="url(#gGoldSide)"/>
+        <rect x="162" y="138" width="11" height="34" fill="url(#gGoldSide)"/>
+        <path d="M27 124H70V141H27C20 141 17 135 19 130 21 126 24 124 27 124Z" fill="url(#gGold)" stroke="#8A5C10"/>
+        <path d="M173 124H130V141H173C180 141 183 135 181 130 179 126 176 124 173 124Z" fill="url(#gGold)" stroke="#8A5C10"/>
+        <rect x="44" y="131" width="112" height="17" rx="8" fill="url(#gVelvet)"/>
+        <path d="M38 146H162V171C162 175 158 178 154 178H46C42 178 38 175 38 171Z" fill="url(#gGold)" stroke="#8A5C10"/>
+        <path d="M52 156H148" stroke="#8A5C10" stroke-width="1.5" stroke-opacity=".55"/>
+        <circle cx="100" cy="165" r="5.5" fill="#B8304A" stroke="#8A5C10"/>
+        <circle cx="72" cy="165" r="3" fill="#2B4BB3" stroke="#8A5C10"/>
+        <circle cx="128" cy="165" r="3" fill="#2B4BB3" stroke="#8A5C10"/>
+      </svg>
+      <p class="hail" id="hail">Loading the throne…</p>
+      <h1 class="king vacant" id="king">&nbsp;</h1>
+      <p class="plate" id="plate" hidden></p>
+      <p class="proclamation" id="proc" hidden></p>
+      <p class="reign" id="reign"></p>
+    </div>
+  </div>
+</div>
+<div class="hem" aria-hidden="true"></div>
+
+<main class="inner">
+  <section class="take">
+    <button class="take-btn" id="takeBtn" type="button" disabled>
+      <svg viewBox="0 0 64 44" aria-hidden="true"><path fill="currentColor" d="M4 14 16 24 32 4 48 24 60 14 55 36H9Z"/><rect x="9" y="38" width="46" height="5" rx="1.5" fill="currentColor"/></svg>
+      <span id="takeLabel">Take the throne</span>
+    </button>
+    <p class="pitch" id="pitch"></p>
+    <p class="meta" id="meta"></p>
+    <p class="meta">Pay more than the minimum at checkout to get a grander title and make the throne pricier for the next challenger.</p>
+    <p class="notice" id="notice" hidden></p>
+    <div class="tryon">
+      <label for="tryInput">See your name on the throne</label>
+      <input id="tryInput" maxlength="24" placeholder="Type your name" autocomplete="nickname">
+    </div>
+    <ul class="pulse" id="pulse">
+      <li id="pWatch" hidden><span class="live-dot" aria-hidden="true"></span><span id="pWatchText"></span></li>
+      <li id="pLast" hidden><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.5" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M8 4.5V8l2.5 1.6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg><span id="pLastText"></span></li>
+      <li id="pRecord" hidden><svg viewBox="0 0 64 44" aria-hidden="true"><path fill="currentColor" d="M4 14 16 24 32 4 48 24 60 14 55 36H9Z"/><rect x="9" y="38" width="46" height="5" rx="1.5" fill="currentColor"/></svg><span id="pRecordText"></span></li>
+    </ul>
+  </section>
+
+  <section class="block">
+    <h2>The price only goes up</h2>
+    <p class="lede" id="ladderText"></p>
+    <div class="chart-wrap">
+      <svg class="chart" id="chart" viewBox="0 0 460 250" role="img" aria-labelledby="ladderText"></svg>
+    </div>
+    <ol class="titles" id="titles"></ol>
+    <p class="titles-note" id="titlesNote"></p>
+  </section>
+
+  <section class="block">
+    <h2>Hall of kings</h2>
+    <p class="lede" id="hallSummary"></p>
+    <div class="records" id="records" hidden></div>
+    <h3 id="rulersHead" hidden>Recent rulers</h3>
+    <ol class="rulers" id="rulers" hidden></ol>
+  </section>
+
+  <section class="block rules">
+    <h2>How it works</h2>
+    <p>Taking the throne costs at least 10% more than the last person paid, and you can always pay more. The more you pay, the grander your title, from Lord all the way to Emperor, and the more it costs to overthrow you. The king gets nothing back except the glory.</p>
+    <p>The daily throne resets to €2 every midnight UTC. The eternal throne never resets, but if no one takes it for 24 hours, its price falls 2% a day.</p>
+    <p>When someone takes your seat, you get an email inviting you to win it back.</p>
+  </section>
+
+  <section class="block mod" id="mod" hidden>
+    <h2>Moderator tools</h2>
+    <p>Only you see these. In the live version, removing a king is also how you handle abusive messages and reversed payments.</p>
+    <div class="mod-actions">
+      <button class="btn-secondary" id="removeBtn" type="button">Remove the current king</button>
+      <button class="btn-secondary btn-danger" id="resetBtn" type="button">Reset the demo</button>
+    </div>
+  </section>
+
+  <p class="foot" id="foot"></p>
+</main>
+
+<dialog id="dlg" aria-labelledby="dlgTitle">
+  <div class="sheet" id="formView">
+    <h2 id="dlgTitle">Take the throne</h2>
+    <div class="co-head">
+      <div id="coCrest"></div>
+      <div>
+        <p class="co-kicker">You’ll be crowned</p>
+        <p class="co-name" id="coName"></p>
+      </div>
+    </div>
+    <label class="field" for="amountInput">Your price</label>
+    <div class="amount">
+      <span class="amount-cur" aria-hidden="true">€</span>
+      <input id="amountInput" type="number" inputmode="decimal" step="0.01" min="2" aria-describedby="amountHelp">
+    </div>
+    <div class="chips" id="chips" role="group" aria-label="Quick prices"></div>
+    <p class="amount-help" id="amountHelp"></p>
+    <p class="lockline" id="lockline"></p>
+    <label class="field" for="nameInput">Your name</label>
+    <input id="nameInput" maxlength="24" autocomplete="nickname">
+    <label class="field" for="msgInput">Your proclamation (optional)</label>
+    <textarea id="msgInput" maxlength="140" rows="3" placeholder="What should your subjects read?"></textarea>
+    <div class="count" id="count">0 / 140</div>
+    <p class="demo-pay">Demo payment: no money moves. In the live version, this step is a real card checkout, and an AI check screens your name and proclamation first.</p>
+    <p class="error" id="err" role="alert" hidden></p>
+    <div class="actions">
+      <button class="take-btn" id="payBtn" type="button">Pay and take the throne</button>
+      <button class="btn-secondary" id="cancelBtn" type="button">Cancel</button>
+    </div>
+  </div>
+  <div class="sheet done" id="doneView" hidden>
+    <div class="confetti" id="confetti" aria-hidden="true"></div>
+    <div id="doneCrest"></div>
+    <p class="hail">Long live</p>
+    <h2 class="done-name" id="doneTitle"></h2>
+    <p class="done-text" id="doneText"></p>
+    <div id="emailBox"></div>
+    <div class="brag">
+      <p id="bragText"></p>
+      <button type="button" id="copyBtn">Copy a brag to share</button>
+    </div>
+    <div class="actions">
+      <button class="take-btn" id="closeBtn" type="button">Close</button>
+    </div>
+  </div>
+</dialog>
+
+<script>
+(function(){
+  "use strict";
+  const BASE = 2, STEP = 1.1, DECAY = 0.98, DAY = 86400000;
+  const LOCK_MS = 180000, LEASE_MS = 30000, RENEW_MS = 20000, FRESH_MS = 35000;
+  const KINDS = ["eternal", "daily"];
+  const KIND_LABEL = { eternal: "eternal throne", daily: "daily throne" };
+  const KIND_NAME = { eternal: "Eternal Throne", daily: "Daily Throne" };
+  const TITLES = [
+    { min: 0, name: "Lord" }, { min: 10, name: "Baron" }, { min: 100, name: "Duke" },
+    { min: 1000, name: "Archduke" }, { min: 10000, name: "Emperor" }
+  ];
+  const SPAM = ["free crypto", "casino bonus", "viagra", "onlyfans", "telegram me", "whatsapp me", "dm for promo"];
+  const holder = "t" + Math.random().toString(36).slice(2) + Date.now().toString(36);
+
+  const money = new Intl.NumberFormat(undefined, { style: "currency", currency: "EUR" });
+  const moneyRound = new Intl.NumberFormat(undefined, { style: "currency", currency: "EUR", maximumFractionDigits: 0 });
+  const fmt = v => money.format(v);
+  const fmtR = v => moneyRound.format(v);
+  const round2 = v => Math.round(v * 100) / 100;
+  const priceAt = k => BASE * Math.pow(STEP, k - 1);
+  const dayKey = ms => new Date(ms).toISOString().slice(0, 10);
+  const nextMidnightUTC = now => { const d = new Date(now); return Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate() + 1); };
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+  const p2 = n => String(n).padStart(2, "0");
+  function dur(ms){
+    const s = Math.floor(Math.max(0, ms) / 1000);
+    const d = Math.floor(s / 86400), h = Math.floor(s % 86400 / 3600), m = Math.floor(s % 3600 / 60), sec = s % 60;
+    if (d) return `${d}d ${h}h ${p2(m)}m`;
+    if (h) return `${h}h ${p2(m)}m ${p2(sec)}s`;
+    if (m) return `${m}m ${p2(sec)}s`;
+    return `${sec}s`;
+  }
+  function ago(ms){
+    const s = Math.floor(Math.max(0, ms) / 1000);
+    if (s < 60) return "just now";
+    const m = Math.floor(s / 60); if (m < 60) return `${m} ${m === 1 ? "minute" : "minutes"} ago`;
+    const h = Math.floor(m / 60); if (h < 24) return `${h} ${h === 1 ? "hour" : "hours"} ago`;
+    const d = Math.floor(h / 24); return `${d} ${d === 1 ? "day" : "days"} ago`;
+  }
+  function clock(ms){ const s = Math.max(0, Math.ceil(ms / 1000)); return `${Math.floor(s / 60)}:${p2(s % 60)}`; }
+  function titleFor(paid){ let t = TITLES[0].name; for (const x of TITLES) if (paid >= x.min) t = x.name; return t; }
+  const article = w => /^[AEIOU]/.test(w) ? "an" : "a";
+  const short = n => n.length > 16 ? n.slice(0, 15) + "…" : n;
+  const cleanName = v => v.trim().replace(/\s+/g, " ");
+  function el(tag, cls, text){ const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+
+  const chains = {};
+  function serial(key, fn){
+    const run = (chains[key] || Promise.resolve()).catch(() => {}).then(fn);
+    chains[key] = run.catch(() => {});
+    return run;
+  }
+
+  /* ---------- heraldry ---------- */
+  const NS = "http://www.w3.org/2000/svg";
+  const TINCTURES = ["#A3243B", "#22409A", "#1E6B47", "#5B2A86", "#1A1A22", "#B4561C"];
+  const SHIELD = "M6 6H94V58C94 92 72 108 50 116 28 108 6 92 6 58Z";
+  let crestCount = 0;
+  function svgEl(tag, attrs){ const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); return e; }
+  function hashStr(s){ let h = 2166136261; for (const ch of s){ h ^= ch.codePointAt(0); h = Math.imul(h, 16777619); } return h >>> 0; }
+  function crestGroup(name){
+    const g = svgEl("g", {});
+    const id = "crestclip" + (++crestCount);
+    const defs = svgEl("defs", {}), clip = svgEl("clipPath", { id });
+    clip.append(svgEl("path", { d: SHIELD })); defs.append(clip); g.append(defs);
+    const vacant = !name;
+    const h = hashStr((name || "").toLowerCase());
+    const field = vacant ? "#3A4280" : TINCTURES[h % TINCTURES.length];
+    const second = (h >>> 4) % 2 ? "#E2B04A" : "#F4F2EA";
+    const division = vacant ? 0 : (h >>> 7) % 5;
+    g.append(svgEl("path", { d: SHIELD, fill: field }));
+    const inner = svgEl("g", { "clip-path": `url(#${id})` });
+    if (division === 1) inner.append(svgEl("rect", { x: 50, y: 0, width: 50, height: 120, fill: second }));
+    if (division === 2) inner.append(svgEl("rect", { x: 0, y: 0, width: 100, height: 48, fill: second }));
+    if (division === 3) inner.append(svgEl("polygon", { points: "0,0 100,0 100,120", fill: second }));
+    if (division === 4) inner.append(svgEl("polygon", { points: "0,86 50,42 100,86 100,106 50,62 0,106", fill: second }));
+    g.append(inner);
+    g.append(svgEl("path", { d: SHIELD, fill: "none", stroke: "#E9BE5A", "stroke-width": 5 }));
+    g.append(svgEl("circle", { cx: 50, cy: 56, r: 21, fill: "#F6D77A", stroke: "#8A5C10", "stroke-width": 2 }));
+    const letter = svgEl("text", { x: 50, y: 57, "text-anchor": "middle", "dominant-baseline": "central", "font-family": "UnifrakturMaguntia, Georgia, serif", "font-size": 30, fill: "#2A1C05" });
+    const first = Array.from((name || "").trim())[0];
+    letter.textContent = first ? first.toUpperCase() : "?";
+    g.append(letter);
+    return g;
+  }
+  function crestSvg(name, cls){
+    const s = svgEl("svg", { viewBox: "0 0 100 120", class: "crest " + (cls || ""), "aria-hidden": "true" });
+    s.append(crestGroup(name));
+    return s;
+  }
+
+  /* ---------- state ---------- */
+  const S = {
+    kind: "eternal", mode: "loading",
+    thrones: { eternal: null, daily: null }, locks: { eternal: null, daily: null }, reigns: [],
+    loaded: {}, shown: {}, me: null, isOwner: false, canWrite: true, busy: false,
+    error: null, flash: null, tryName: "", watching: 0
+  };
+  let adapter = null, CO = null, flashTimer = null;
+
+  const $ = id => document.getElementById(id);
+  const E = {};
+  ["scene","previewBadge","crestSlot","hail","king","plate","proc","reign","takeBtn","takeLabel","pitch","meta","notice",
+   "tryInput","pulse","pWatch","pWatchText","pLast","pLastText","pRecord","pRecordText","ladderText","chart","titles","titlesNote",
+   "hallSummary","records","rulersHead","rulers","mod","removeBtn","resetBtn","foot",
+   "dlg","formView","doneView","dlgTitle","coCrest","coName","amountInput","chips","amountHelp","lockline","nameInput","msgInput","count","err","payBtn","cancelBtn",
+   "confetti","doneCrest","doneTitle","doneText","emailBox","bragText","copyBtn","closeBtn"].forEach(id => { E[id] = $(id); });
+
+  function kingVisible(kind, t, now){
+    if (!t || !t.king) return false;
+    if (kind === "daily" && dayKey(t.crownedAt) !== dayKey(now)) return false;
+    return true;
+  }
+  function priceFor(kind, t, now){
+    if (!t || !t.lastPaid) return BASE;
+    if (kind === "daily"){
+      if (dayKey(t.crownedAt) !== dayKey(now)) return BASE;
+      return round2(t.lastPaid * STEP);
+    }
+    let p = t.lastPaid * STEP;
+    const idle = Math.floor((now - t.crownedAt) / DAY);
+    if (idle > 0) p *= Math.pow(DECAY, idle);
+    return Math.max(BASE, round2(p));
+  }
+  function isMine(t){ return !!t && (t.by === holder || (!!S.me && t.by === S.me)); }
+
+  function setFlash(msg){
+    S.flash = msg; clearTimeout(flashTimer);
+    flashTimer = setTimeout(() => { S.flash = null; render(); }, 8000);
+    render();
+  }
+  function errText(e){
+    const c = e && e.code;
+    if (c === "quota_exceeded") return "The hall of kings is full. Reset the demo to keep playing.";
+    if (c === "resource_exhausted") return "Too many takeovers at once. Wait a moment and try again.";
+    return "The throne couldn’t be updated. Try again.";
+  }
+  function moderate(text){
+    const t = text.toLowerCase();
+    if (/https?:|www\.|\b[a-z0-9-]+\.(com|net|org|io|ch|de|co|xyz|ly|gg|app|me)\b/.test(t)) return "Links aren’t allowed on the throne. Remove the link and try again.";
+    if (SPAM.some(w => t.includes(w))) return "That looks like spam, so it can’t go on the throne. Change it and try again.";
+    return null;
+  }
+
+  /* ---------- storage adapters ---------- */
+  function dbAdapter(db){
+    function onErr(e){
+      if (e && (e.code === "revoked" || e.code === "unavailable")) { S.error = "The live throne is unavailable right now. Reload the page to reconnect."; render(); }
+    }
+    return {
+      watch(){
+        KINDS.forEach(k => {
+          db.doc("thrones/" + k).onSnapshot(s => { S.thrones[k] = s.exists ? s.data() : null; S.loaded[k] = true; render(); }, onErr);
+          db.doc("locks/" + k).onSnapshot(s => { S.locks[k] = s.exists ? s.data() : null; render(); }, onErr);
+        });
+        db.collection("reigns").orderBy("start", "desc").limit(500).onSnapshot(q => {
+          S.reigns = q.docs.map(d => Object.assign({ id: d.id }, d.data())); render();
+        }, onErr);
+      },
+      async getThrone(k){ const s = await db.doc("thrones/" + k).get(); return s.exists ? s.data() : null; },
+      async lock(k, data){
+        const ref = db.doc("locks/" + k);
+        try { return await ref.acquire({ holder, ttlMs: LEASE_MS, data }); }
+        catch (e) {
+          if (e && e.code === "invalid_argument"){
+            const s = await ref.get();
+            if (!s.exists){ await ref.set({ holder: "", lockedUntil: 0, renewedAt: 0 }); return await ref.acquire({ holder, ttlMs: LEASE_MS, data }); }
+          }
+          throw e;
+        }
+      },
+      unlock(k){ return db.doc("locks/" + k).acquire({ holder, ttlMs: 1000, data: { holder: "", lockedUntil: 0, renewedAt: 0 } }); },
+      async addReign(r){ const ref = await db.collection("reigns").add(r); return ref.id; },
+      setThrone(k, t){ return db.doc("thrones/" + k).set(t); },
+      updateThrone(k, patch){ return db.doc("thrones/" + k).update(patch); },
+      updateReign(id, patch){ return db.doc("reigns/" + id).update(patch); },
+      async deleteAll(ids){
+        for (const id of ids) await db.doc("reigns/" + id).delete();
+        for (const k of KINDS){ await db.doc("thrones/" + k).delete(); await db.doc("locks/" + k).delete(); }
+      }
+    };
+  }
+
+  function localAdapter(){
+    const KEY = "the-throne-demo-v1";
+    let mem = { thrones: {}, reigns: [] };
+    try { const raw = localStorage.getItem(KEY); if (raw){ const v = JSON.parse(raw); if (v && v.thrones && Array.isArray(v.reigns)) mem = v; } } catch (e) {}
+    const save = () => { try { localStorage.setItem(KEY, JSON.stringify(mem)); } catch (e) {} };
+    const clone = v => v ? JSON.parse(JSON.stringify(v)) : null;
+    const emit = () => {
+      KINDS.forEach(k => { S.thrones[k] = clone(mem.thrones[k]); S.loaded[k] = true; });
+      S.locks = { eternal: null, daily: null };
+      S.reigns = clone(mem.reigns);
+      render();
+    };
+    return {
+      watch(){ emit(); },
+      async getThrone(k){ return clone(mem.thrones[k]); },
+      async lock(){ return { acquired: true }; },
+      async unlock(){},
+      async addReign(r){ const id = "r" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); mem.reigns.push(Object.assign({ id }, r)); save(); emit(); return id; },
+      async setThrone(k, t){ mem.thrones[k] = clone(t); save(); emit(); },
+      async updateThrone(k, patch){ if (mem.thrones[k]) Object.assign(mem.thrones[k], patch); save(); emit(); },
+      async updateReign(id, patch){ const r = mem.reigns.find(x => x.id === id); if (r) Object.assign(r, patch); save(); emit(); },
+      async deleteAll(){ mem = { thrones: {}, reigns: [] }; save(); emit(); }
+    };
+  }
+
+  /* ---------- rendering ---------- */
+  function reignsFor(kind, now){
+    let list = S.reigns.filter(r => r.throne === kind);
+    if (kind === "daily"){ const today = dayKey(now); list = list.filter(r => dayKey(r.start) === today); }
+    list.sort((a, b) => a.start - b.start);
+    return list.map((r, i) => {
+      const nx = list[i + 1];
+      const end = r.endedAt || (nx ? nx.start : null);
+      return Object.assign({}, r, { ongoing: end == null, length: (end == null ? now : end) - r.start });
+    });
+  }
+
+  let heroCrestKey = null;
+  function setHeroCrest(name){
+    const key = name || "";
+    if (key === heroCrestKey) return;
+    heroCrestKey = key;
+    E.crestSlot.replaceChildren(crestGroup(name));
+  }
+
+  let chartSig = "";
+  function renderLadder(kind, price){
+    const n = Math.max(1, Math.round(Math.log(price / BASE) / Math.log(STEP)) + 1);
+    const N = Math.max(100, Math.ceil(n * 1.3 / 10) * 10);
+    const m1 = [25, 50, 75, 100, 150, 200, 300, 500].find(m => m >= n + 15 && m <= N - 15);
+    const daily = kind === "daily";
+    const sig = [kind, n, N, m1, price].join("|");
+    if (sig === chartSig) return;
+    chartSig = sig;
+
+    let text = daily
+      ? `Every takeover adds at least 10% until midnight UTC. Today’s crown started at ${fmt(BASE)} and costs ${fmt(price)} now.`
+      : `Every takeover adds at least 10%. The crown started at ${fmt(BASE)} and costs ${fmt(price)} now.`;
+    if (m1) text += ` Even at the minimum, it reaches ${fmtR(priceAt(m1))} by takeover #${m1} and ${fmtR(priceAt(N))} by #${N}.`;
+    else text += ` Even at the minimum, it reaches ${fmtR(priceAt(N))} by takeover #${N}.`;
+    text += " The earlier you rule, the cheaper the crown.";
+    E.ladderText.textContent = text;
+
+    const W = 460, H = 250, L = 14, R = 14, T = 34, B = 30;
+    const pmax = priceAt(N);
+    const x = k => L + (k - 1) / (N - 1) * (W - L - R);
+    const y = v => H - B - (v / pmax) * (H - T - B);
+    let d = "";
+    for (let k = 1; k <= N; k++) d += (k === 1 ? "M" : "L") + x(k).toFixed(1) + " " + y(priceAt(k)).toFixed(1);
+    const svg = E.chart;
+    svg.replaceChildren();
+    const defs = svgEl("defs", {});
+    const grad = svgEl("linearGradient", { id: "areaGold", x1: 0, y1: 0, x2: 0, y2: 1 });
+    grad.append(svgEl("stop", { offset: 0, "stop-color": "#E2B04A", "stop-opacity": .45 }), svgEl("stop", { offset: 1, "stop-color": "#E2B04A", "stop-opacity": 0 }));
+    defs.append(grad); svg.append(defs);
+    svg.append(svgEl("path", { d: d + `L${x(N).toFixed(1)} ${H - B}L${x(1).toFixed(1)} ${H - B}Z`, fill: "url(#areaGold)" }));
+    svg.append(svgEl("line", { x1: L, y1: H - B, x2: W - R, y2: H - B, stroke: "currentColor", "stroke-opacity": .25 }));
+    svg.append(svgEl("path", { d, fill: "none", stroke: "#C8921E", "stroke-width": 3, "stroke-linejoin": "round" }));
+    const txt = (cls, tx, ty, anchor, s) => { const t = svgEl("text", { class: cls, x: tx, y: ty, "text-anchor": anchor }); t.textContent = s; svg.append(t); };
+
+    if (m1){
+      const mx = x(m1), my = y(priceAt(m1));
+      svg.append(svgEl("circle", { cx: mx, cy: my, r: 4, fill: "#C8921E" }));
+      txt("ct-strong", mx, my - 26, "middle", `Takeover #${m1}`);
+      txt("ct", mx, my - 10, "middle", fmtR(priceAt(m1)));
+    }
+    svg.append(svgEl("circle", { cx: x(N), cy: y(pmax), r: 4, fill: "#C8921E" }));
+    txt("ct-strong", x(N) - 10, T + 6, "end", `Takeover #${N}`);
+    txt("ct", x(N) - 10, T + 22, "end", fmtR(pmax));
+
+    const cx = x(n), cy = y(price);
+    svg.append(svgEl("line", { x1: cx, y1: cy - 8, x2: cx, y2: 84, stroke: "#C8921E", "stroke-width": 1.5, "stroke-dasharray": "3 4" }));
+    svg.append(svgEl("circle", { cx, cy, r: 11, fill: "#E2B04A", "fill-opacity": .3 }));
+    svg.append(svgEl("circle", { cx, cy, r: 6, fill: "#E2B04A", stroke: "#8A5C10", "stroke-width": 2 }));
+    txt("ct-gold", cx + 8, 64, "start", "You are here");
+    txt("ct-strong", cx + 8, 82, "start", fmt(price));
+    txt("ct", L, H - 9, "start", "Start");
+    txt("ct", W - R, H - 9, "end", `Takeover #${N}`);
+  }
+
+  let titlesSig = "";
+  function renderTitles(price){
+    const cur = titleFor(price);
+    if (cur === titlesSig) return;
+    titlesSig = cur;
+    E.titles.replaceChildren(...TITLES.map(t => {
+      const li = el("li", t.name === cur ? "is-current" : "");
+      if (t.name === cur) li.setAttribute("aria-current", "true");
+      li.append(el("span", "t-name", t.name), el("span", "t-from", `from ${t.min ? fmtR(t.min) : fmtR(BASE)}`));
+      return li;
+    }));
+    E.titlesNote.textContent = `Your title depends on what you pay. Right now the throne makes you ${article(cur)} ${cur}.`;
+  }
+
+  let hallSig = "", rowTimes = [], recSig = "", recRefs = null;
+  function recordCard(label, r){
+    const box = el("div", "record"), body = el("div"), val = el("p", "what");
+    body.append(el("p", "label", label), el("p", "who", `${titleFor(r.paid)} ${r.name}`), val);
+    box.append(crestSvg(r.name, "crest-md"), body);
+    return { box, val };
+  }
+  function renderHall(kind, now, list){
+    const daily = kind === "daily";
+    const total = list.reduce((s, r) => s + (Number(r.paid) || 0), 0);
+    E.hallSummary.textContent = list.length
+      ? `${daily ? "Today, " : ""}${list.length} ${list.length === 1 ? "king has" : "kings have"} paid ${fmt(total)} for this throne.`
+      : (daily ? `No one has ruled today. The first king pays ${fmt(BASE)}.` : `No one has ruled yet. The first king pays ${fmt(BASE)}.`);
+
+    if (!list.length){
+      if (recSig !== "empty"){ recSig = "empty"; E.records.replaceChildren(); E.records.hidden = true; }
+    } else {
+      const top = list.reduce((b, r) => (!b || r.paid > b.paid) ? r : b, null);
+      const longest = list.reduce((b, r) => (!b || r.length > b.length) ? r : b, null);
+      const sig = kind + "|" + longest.id + "|" + top.id;
+      if (sig !== recSig){
+        recSig = sig;
+        const a = recordCard(daily ? "Longest reign today" : "Longest reign", longest);
+        const b = recordCard(daily ? "Highest price today" : "Highest price paid", top);
+        recRefs = { a: a.val, b: b.val };
+        E.records.replaceChildren(a.box, b.box);
+        E.records.hidden = false;
+      }
+      recRefs.a.textContent = dur(longest.length);
+      recRefs.b.textContent = fmt(top.paid);
+    }
+
+    const recent = list.slice().reverse().slice(0, 12);
+    const sig = kind + "|" + recent.map(r => r.id + (r.removed ? "x" : "") + (r.ongoing ? "o" : "")).join(",");
+    if (sig !== hallSig){
+      hallSig = sig; rowTimes = [];
+      E.rulers.replaceChildren(...recent.map(r => {
+        const li = el("li");
+        const who = el("span", "r-name");
+        who.append(el("span", "r-title", titleFor(r.paid) + " "), document.createTextNode(r.name));
+        const time = el("span", "r-time");
+        rowTimes.push(time);
+        li.append(crestSvg(r.name, "crest-sm"), who, el("span", "r-paid", fmt(r.paid)), time);
+        return li;
+      }));
+      E.rulersHead.hidden = E.rulers.hidden = !recent.length;
+    }
+    recent.forEach((r, i) => {
+      if (!rowTimes[i]) return;
+      rowTimes[i].textContent = r.removed ? `Removed after ${dur(r.length)}`
+        : r.ongoing ? `Reigning now, ${dur(r.length)} so far`
+        : `Ruled for ${dur(r.length)}`;
+    });
+  }
+
+  function render(){
+    const now = Date.now(), kind = S.kind, t = S.thrones[kind];
+    document.querySelectorAll(".switch button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.kind === kind)));
+    if (S.mode === "loading"){ E.takeBtn.disabled = true; return; }
+
+    const visible = kingVisible(kind, t, now);
+    const mine = visible && isMine(t);
+    const price = priceFor(kind, t, now), nextP = round2(price * STEP), newTitle = titleFor(price);
+    const preview = !!S.tryName;
+
+    E.previewBadge.hidden = !preview;
+    E.scene.classList.toggle("is-preview", preview);
+    if (preview){
+      setHeroCrest(S.tryName);
+      E.hail.textContent = "Picture this";
+      E.king.textContent = S.tryName; E.king.classList.remove("vacant");
+      E.plate.textContent = `${newTitle} of the ${KIND_NAME[kind]}`; E.plate.hidden = false;
+      E.proc.hidden = true;
+      E.reign.textContent = `This seat is yours for ${fmt(price)}.`;
+    } else if (visible){
+      setHeroCrest(t.king.name);
+      E.hail.textContent = "Long live";
+      E.king.textContent = t.king.name; E.king.classList.remove("vacant");
+      E.plate.textContent = `${titleFor(t.lastPaid)} of the ${KIND_NAME[kind]}`; E.plate.hidden = false;
+      E.proc.textContent = t.king.message ? `“${t.king.message}”` : ""; E.proc.hidden = !t.king.message;
+      E.reign.textContent = `${mine ? "That’s you. " : ""}Reigning for ${dur(now - t.crownedAt)}`;
+    } else {
+      setHeroCrest("");
+      let hail = "No one has ruled yet", proc = "";
+      if (t && !t.king && t.removedAt && (kind !== "daily" || dayKey(t.removedAt) === dayKey(now))){
+        hail = "The last king was removed";
+      } else if (kind === "daily" && t && t.crownedAt && dayKey(t.crownedAt) !== dayKey(now)){
+        hail = "A new day has begun";
+        if (t.king) proc = `${dayKey(t.crownedAt) === dayKey(now - DAY) ? "Yesterday’s" : "Last"} ruler: ${t.king.name}`;
+      }
+      E.hail.textContent = hail;
+      E.king.textContent = "Vacant"; E.king.classList.add("vacant");
+      E.plate.hidden = true;
+      E.proc.textContent = proc; E.proc.hidden = !proc;
+      E.reign.textContent = `The first person to pay ${fmt(price)} takes it.`;
+    }
+
+    if (S.loaded[kind] && !preview){
+      const key = visible ? (t.reignId || String(t.crownedAt)) : "vacant";
+      if (S.shown[kind] !== undefined && S.shown[kind] !== key && visible){
+        E.king.classList.remove("crowned"); void E.king.offsetWidth; E.king.classList.add("crowned");
+      }
+      S.shown[kind] = key;
+    }
+
+    let label;
+    if (mine) label = `Crown yourself again for ${fmt(price)}`;
+    else if (preview) label = `Take the throne as ${short(S.tryName)} for ${fmt(price)}`;
+    else if (visible) label = `Overthrow ${short(t.king.name)} for ${fmt(price)}`;
+    else label = `Claim the empty throne for ${fmt(price)}`;
+    E.takeLabel.textContent = label;
+
+    if (visible && !mine){
+      const cur = titleFor(t.lastPaid);
+      E.pitch.textContent = cur !== newTitle
+        ? `${t.king.name} is only ${article(cur)} ${cur}. You’d be crowned ${newTitle}.`
+        : `You’ll be crowned ${newTitle} of the ${KIND_NAME[kind]}.`;
+    } else {
+      E.pitch.textContent = `You’ll be crowned ${newTitle} of the ${KIND_NAME[kind]}.`;
+    }
+    let tail;
+    if (kind === "daily") tail = `Resets to ${fmt(BASE)} at midnight UTC, in ${dur(nextMidnightUTC(now) - now)}.`;
+    else {
+      const idle = t && t.lastPaid ? Math.floor((now - t.crownedAt) / DAY) : 0;
+      tail = idle > 0
+        ? `Untouched for ${idle} ${idle === 1 ? "day" : "days"}, so the price has fallen ${Math.round((1 - Math.pow(DECAY, idle)) * 100)}%.`
+        : "If no one takes it for 24 hours, the price falls 2% a day.";
+    }
+    E.meta.textContent = `If you pay the minimum, the next challenger pays ${fmt(nextP)}. ${tail}`;
+
+    const lk = S.locks[kind];
+    const locked = !!(lk && lk.holder && lk.holder !== holder && lk.lockedUntil > now && lk.renewedAt > now - FRESH_MS);
+    let notice = null;
+    if (S.error) notice = S.error;
+    else if (locked) notice = `Someone is paying for this throne right now. Their price is locked for ${clock(lk.lockedUntil - now)}.`;
+    else if (!S.canWrite) notice = "You can watch, but your access to this page doesn’t let you take the throne.";
+    else if (S.flash) notice = S.flash;
+    E.notice.hidden = !notice;
+    if (notice) E.notice.textContent = notice;
+    E.takeBtn.disabled = locked || !S.canWrite || S.busy || !!S.error || !!CO;
+
+    const list = reignsFor(kind, now);
+    const last = list[list.length - 1];
+    const longest = list.reduce((b, r) => (!b || r.length > b.length) ? r : b, null);
+    E.pWatch.hidden = S.watching < 2;
+    if (S.watching >= 2) E.pWatchText.textContent = `${S.watching} people watching right now`;
+    E.pLast.hidden = !last;
+    if (last) E.pLastText.textContent = `Last takeover ${ago(now - last.start)}`;
+    E.pRecord.hidden = !longest || longest.length < 60000;
+    if (!E.pRecord.hidden) E.pRecordText.textContent = `Record reign ${dur(longest.length)} by ${short(longest.name)}`;
+    E.pulse.hidden = E.pWatch.hidden && E.pLast.hidden && E.pRecord.hidden;
+
+    renderLadder(kind, price);
+    renderTitles(price);
+    renderHall(kind, now, list);
+
+    E.mod.hidden = !S.isOwner;
+    E.removeBtn.disabled = !visible;
+    E.foot.textContent = S.mode === "shared"
+      ? "Demo with simulated payments. Everyone you share this page with sees the same throne live. People need Contributor access to take it."
+      : "Local demo with simulated payments. Only you can see this throne, in this browser.";
+  }
+
+  /* ---------- checkout ---------- */
+  const payLabel = price => `Pay ${fmt(price)} and take the throne`;
+  function showErr(msg){ E.err.textContent = msg; E.err.hidden = false; }
+  let coCrestKey = null;
+  const MAX_PRICE = 1000000;
+  function readAmount(){
+    const c = CO; if (!c) return null;
+    const v = round2(parseFloat(E.amountInput.value));
+    if (!isFinite(v) || v < c.price || v > MAX_PRICE) return null;
+    return v;
+  }
+  function buildChips(min){
+    const opts = [{ label: "Minimum", amount: min }];
+    const nextTitle = TITLES.find(t => t.min > min);
+    if (nextTitle && nextTitle.min <= MAX_PRICE) opts.push({ label: `Become ${nextTitle.name}`, amount: nextTitle.min });
+    [2, 5].forEach(m => { const a = round2(min * m); if (a <= MAX_PRICE) opts.push({ label: `×${m}`, amount: a }); });
+    opts.sort((a, b) => a.amount - b.amount);
+    const seen = new Set();
+    E.chips.replaceChildren(...opts.filter(o => !seen.has(o.amount) && seen.add(o.amount)).map(o => {
+      const b = el("button", "chip");
+      b.type = "button"; b.dataset.amount = String(o.amount);
+      b.append(el("span", "chip-label", o.label), el("span", "chip-amount", Number.isInteger(o.amount) ? fmtR(o.amount) : fmt(o.amount)));
+      b.addEventListener("click", () => { E.amountInput.value = o.amount.toFixed(2); updateCoPreview(); });
+      return b;
+    }));
+  }
+  function updateCoPreview(){
+    const c = CO; if (!c) return;
+    const nm = cleanName(E.nameInput.value);
+    const amount = readAmount();
+    const shown = amount == null ? c.price : amount;
+    E.coName.textContent = `${titleFor(shown)} ${nm || "You"}`;
+    if (nm !== coCrestKey){ coCrestKey = nm; E.coCrest.replaceChildren(crestSvg(nm, "crest-lg")); }
+    const raw = parseFloat(E.amountInput.value);
+    let help;
+    if (amount == null){
+      help = isFinite(raw) && raw > MAX_PRICE ? `The most you can pay in this demo is ${fmtR(MAX_PRICE)}.` : `The minimum is ${fmt(c.price)}.`;
+    } else {
+      const minTitle = titleFor(c.price), myTitle = titleFor(amount);
+      help = amount === c.price ? "That’s the minimum." : `${fmt(round2(amount - c.price))} above the minimum.`;
+      if (myTitle !== minTitle) help += ` You’ll rank as ${article(myTitle)} ${myTitle} instead of ${article(minTitle)} ${minTitle}.`;
+      help += ` The next challenger pays ${fmt(round2(amount * STEP))}.`;
+    }
+    E.amountHelp.textContent = help;
+    E.amountHelp.classList.toggle("is-bad", amount == null);
+    E.payBtn.textContent = payLabel(shown);
+    E.payBtn.disabled = amount == null || c.paying;
+    E.chips.querySelectorAll(".chip").forEach(b => b.setAttribute("aria-pressed", String(Number(b.dataset.amount) === amount)));
+  }
+
+  async function openCheckout(){
+    if (S.busy || !S.canWrite || !adapter || CO) return;
+    const kind = S.kind;
+    S.busy = true; S.flash = null; render();
+    try {
+      const lockedUntil = Date.now() + LOCK_MS;
+      const tryLock = () => serial("lock-" + kind, () => adapter.lock(kind, { holder, lockedUntil, renewedAt: Date.now() }));
+      let res = await tryLock();
+      if (res && !res.acquired && res.expiresAt){
+        const wait = Date.parse(res.expiresAt) - Date.now();
+        if (wait < 4000){ await sleep(Math.max(0, wait) + 250); res = await tryLock(); }
+      }
+      if (!res || !res.acquired){ setFlash("Someone else is paying for this throne right now. Try again in a moment."); return; }
+      const fresh = await adapter.getThrone(kind);
+      const price = priceFor(kind, fresh, Date.now());
+      CO = { kind, price, lockedUntil, prev: fresh, done: false, paying: false, timers: [] };
+      CO.timers.push(setInterval(renewLock, RENEW_MS), setInterval(tickCheckout, 1000));
+      E.formView.hidden = false; E.doneView.hidden = true;
+      E.dlg.setAttribute("aria-labelledby", "dlgTitle");
+      E.dlgTitle.textContent = `Take the ${KIND_LABEL[kind]}`;
+      if (S.tryName) E.nameInput.value = S.tryName;
+      E.amountInput.min = price.toFixed(2); E.amountInput.value = price.toFixed(2);
+      buildChips(price);
+      E.payBtn.disabled = false;
+      E.err.hidden = true;
+      coCrestKey = null; updateCoPreview(); tickCheckout();
+      E.dlg.showModal();
+      E.nameInput.focus();
+    } catch (e) {
+      if (e && e.code === "invalid_argument") S.canWrite = false;
+      else setFlash(errText(e));
+    } finally {
+      S.busy = false; render();
+    }
+  }
+
+  function renewLock(){
+    const c = CO; if (!c || c.done) return;
+    serial("lock-" + c.kind, () => adapter.lock(c.kind, { holder, lockedUntil: c.lockedUntil, renewedAt: Date.now() }))
+      .then(r => { if (r && !r.acquired && CO === c && !c.done && !c.paying) endCheckout("lost"); })
+      .catch(() => {});
+  }
+  function tickCheckout(){
+    const c = CO; if (!c) return;
+    const left = c.lockedUntil - Date.now();
+    E.lockline.textContent = `Your minimum of ${fmt(c.price)} is locked for ${clock(left)}.`;
+    if (left <= 0 && !c.paying) endCheckout("expired");
+  }
+  function endCheckout(reason){
+    const c = CO; if (!c) return;
+    c.timers.forEach(clearInterval); CO = null;
+    if (!c.done) serial("lock-" + c.kind, () => adapter.unlock(c.kind)).catch(() => {});
+    if (reason === "expired") setFlash("Your price lock ran out. Open checkout again to get the current price.");
+    if (reason === "lost") setFlash("Your price lock was lost. Open checkout again.");
+    if (reason !== "closed" && E.dlg.open) E.dlg.close();
+    render();
+  }
+
+  async function pay(){
+    const c = CO; if (!c || c.paying) return;
+    const name = cleanName(E.nameInput.value);
+    const message = cleanName(E.msgInput.value);
+    if (!name){ showErr("Enter the name the throne should display."); E.nameInput.focus(); return; }
+    const problem = moderate(name + " " + message);
+    if (problem){ showErr(problem); return; }
+    const amount = readAmount();
+    if (amount == null){ showErr(`Enter a price between ${fmt(c.price)} and ${fmtR(MAX_PRICE)}.`); E.amountInput.focus(); return; }
+    c.paying = true; E.err.hidden = true;
+    E.payBtn.disabled = true; E.payBtn.textContent = "Processing payment…";
+    try {
+      const now = Date.now(), by = S.me || holder;
+      const reignId = await adapter.addReign({ throne: c.kind, name, message, paid: amount, start: now, by });
+      await serial("throne-" + c.kind, () => adapter.setThrone(c.kind, {
+        king: { name, message }, by, lastPaid: amount, crownedAt: now, reignId, removedAt: null
+      }));
+      c.done = true; c.timers.forEach(clearInterval); CO = null;
+      serial("lock-" + c.kind, () => adapter.unlock(c.kind)).catch(() => {});
+      S.tryName = ""; E.tryInput.value = "";
+      showSuccess(Object.assign({}, c, { price: amount }), name, by, now);
+      render();
+    } catch (e) {
+      c.paying = false; updateCoPreview();
+      if (e && e.code === "invalid_argument"){ S.canWrite = false; showErr("Your access to this page doesn’t let you take the throne."); }
+      else showErr(errText(e));
+    }
+  }
+
+  function confetti(layer){
+    if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const colors = ["#F6D77A", "#E2B04A", "#FFF3C4", "#B8304A", "#F4F2EA"];
+    const height = layer.clientHeight || 500;
+    for (let i = 0; i < 80; i++){
+      const p = el("span", "confetto");
+      if (typeof p.animate !== "function") return;
+      const w = 6 + Math.random() * 6;
+      p.style.cssText = `left:${Math.random() * 100}%;width:${w}px;height:${w * .45}px;background:${colors[i % colors.length]};`;
+      layer.append(p);
+      const dx = (Math.random() - .5) * 180, rot = Math.random() * 900 - 450;
+      const a = p.animate(
+        [{ transform: "translate(0,0) rotate(0deg)", opacity: 1 }, { transform: `translate(${dx}px, ${height + 40}px) rotate(${rot}deg)`, opacity: .85 }],
+        { duration: 1700 + Math.random() * 1500, delay: Math.random() * 450, easing: "cubic-bezier(.2,.6,.4,1)", fill: "forwards" }
+      );
+      a.onfinish = () => p.remove();
+    }
+  }
+
+  function showSuccess(c, name, by, now){
+    E.formView.hidden = true; E.doneView.hidden = false;
+    E.dlg.setAttribute("aria-labelledby", "doneTitle");
+    const title = titleFor(c.price), nextP = round2(c.price * STEP);
+    E.doneCrest.replaceChildren(crestSvg(name, "crest-xl"));
+    E.doneTitle.textContent = `${title} ${name}`;
+    E.doneText.textContent = `You paid ${fmt(c.price)} for the ${KIND_LABEL[c.kind]}. The next challenger pays ${fmt(nextP)}.`;
+    const prev = c.prev;
+    E.emailBox.replaceChildren();
+    if (kingVisible(c.kind, prev, now) && (prev.by !== by || prev.king.name !== name)){
+      E.emailBox.append(el("p", "email-intro", `In the live version, ${prev.king.name} gets this email right now:`));
+      const box = el("div", "email"), head = el("div", "email-head"), body = el("div", "email-body");
+      head.append(el("div", null, "From: The Throne"), el("div", null, "Subject: You’ve been overthrown"));
+      body.append(
+        el("p", null, `${title} ${name} just took your seat on the ${KIND_LABEL[c.kind]}. Win it back for ${fmt(nextP)} before they get comfortable.`),
+        el("span", "fake-link", "Reclaim my throne")
+      );
+      box.append(head, body);
+      E.emailBox.append(box);
+    } else {
+      E.emailBox.append(el("p", "email-intro", "When someone takes your seat, you’ll get an email inviting you to win it back. That email is the whole business model."));
+    }
+    E.bragText.textContent = `I just took The Throne and was crowned ${title} ${name} for ${fmt(c.price)}. Come and take it from me.`;
+    E.copyBtn.textContent = "Copy a brag to share";
+    E.closeBtn.focus();
+    confetti(E.confetti);
+  }
+
+  /* ---------- moderator tools ---------- */
+  function confirmTwice(btn, label, confirmLabel, action){
+    let armed = false, timer = null;
+    btn.addEventListener("click", async () => {
+      if (!armed){
+        armed = true; btn.textContent = confirmLabel;
+        timer = setTimeout(() => { armed = false; btn.textContent = label; }, 4000);
+        return;
+      }
+      clearTimeout(timer); armed = false; btn.textContent = label;
+      btn.disabled = true;
+      try { await action(); } catch (e) { setFlash(errText(e)); }
+      finally { btn.disabled = false; render(); }
+    });
+  }
+  confirmTwice(E.removeBtn, "Remove the current king", "Click again to remove", async () => {
+    const kind = S.kind, t = S.thrones[kind], now = Date.now();
+    if (!kingVisible(kind, t, now)) return;
+    await serial("throne-" + kind, () => adapter.updateThrone(kind, { king: null, removedAt: now }));
+    if (t.reignId) await adapter.updateReign(t.reignId, { endedAt: now, removed: true });
+  });
+  confirmTwice(E.resetBtn, "Reset the demo", "Click again to delete everything", async () => {
+    await adapter.deleteAll(S.reigns.map(r => r.id));
+    S.shown = {};
+  });
+
+  /* ---------- events ---------- */
+  document.querySelectorAll(".switch button").forEach(b => b.addEventListener("click", () => { S.kind = b.dataset.kind; S.flash = null; render(); }));
+  E.takeBtn.addEventListener("click", openCheckout);
+  E.tryInput.addEventListener("input", () => { S.tryName = cleanName(E.tryInput.value).slice(0, 24); render(); });
+  E.tryInput.addEventListener("keydown", e => { if (e.key === "Enter" && S.tryName){ e.preventDefault(); openCheckout(); } });
+  E.payBtn.addEventListener("click", pay);
+  E.cancelBtn.addEventListener("click", () => E.dlg.close());
+  E.closeBtn.addEventListener("click", () => E.dlg.close());
+  E.dlg.addEventListener("close", () => { if (CO && !CO.done) endCheckout("closed"); });
+  E.nameInput.addEventListener("input", updateCoPreview);
+  E.amountInput.addEventListener("input", updateCoPreview);
+  E.amountInput.addEventListener("keydown", e => { if (e.key === "Enter"){ e.preventDefault(); pay(); } });
+  E.nameInput.addEventListener("keydown", e => { if (e.key === "Enter"){ e.preventDefault(); pay(); } });
+  E.msgInput.addEventListener("input", () => { E.count.textContent = `${E.msgInput.value.length} / 140`; });
+  E.copyBtn.addEventListener("click", async () => {
+    try { await navigator.clipboard.writeText(E.bragText.textContent); E.copyBtn.textContent = "Copied"; }
+    catch (e) { E.copyBtn.textContent = "Copying isn’t allowed here. Select the text above instead."; }
+  });
+
+  /* ---------- boot ---------- */
+  (async function boot(){
+    render();
+    let db = null, user = null, room = null;
+    const c = window.claude;
+    if (c && typeof c.use === "function"){
+      try {
+        [db, user, room] = await Promise.all([
+          c.use("db").catch(() => null),
+          c.use("user").catch(() => null),
+          c.use("room").catch(() => null)
+        ]);
+      } catch (e) {}
+    }
+    if (db){
+      adapter = dbAdapter(db); S.mode = "shared";
+      if (user){
+        try {
+          S.me = await user.id();
+          S.isOwner = await user.isOwner();
+          const cw = await user.can("data.write");
+          if (cw === false) S.canWrite = false;
+        } catch (e) {}
+      }
+    } else {
+      adapter = localAdapter(); S.mode = "local"; S.isOwner = true; S.canWrite = true;
+    }
+    if (room){
+      const count = peers => new Set(peers.filter(p => p.kind === "viewer").map(p => p.peer)).size;
+      try {
+        room.onPeers(ch => { S.watching = count(ch.peers); render(); }, () => { S.watching = 0; render(); });
+        S.watching = count(room.peers());
+      } catch (e) {}
+    }
+    adapter.watch();
+    render();
+  })();
+  setInterval(render, 1000);
+})();
+</script>
+</body>
+</html>
