@@ -97,7 +97,6 @@
   padding: 0.5rem 0;
   font-size: 1.7rem;
   font-weight: 800;
-  font-variant-numeric: tabular-nums;
 }
 .sheet .amount input:focus {
   outline: none;
@@ -127,7 +126,6 @@
 }
 .chipAmount {
   font-weight: 800;
-  font-variant-numeric: tabular-nums;
 }
 .chip[aria-pressed="true"] {
   border-color: var(--gold-lo);
@@ -150,7 +148,6 @@
   margin: 0.3rem 0 0;
   color: var(--muted);
   font-size: 0.85rem;
-  font-variant-numeric: tabular-nums;
 }
 .sheet input:not([type]),
 .sheet input[type="text"],
@@ -181,7 +178,6 @@
   color: var(--muted);
   text-align: right;
   margin-top: 0.25rem;
-  font-variant-numeric: tabular-nums;
 }
 .check {
   display: flex;
@@ -196,6 +192,9 @@
   height: 1.15rem;
   margin-top: 0.2rem;
   accent-color: var(--gold-lo);
+}
+.check label {
+  cursor: pointer;
 }
 .check a {
   color: var(--accent);
@@ -237,35 +236,37 @@
   background: var(--crimson-bg);
   color: var(--crimson);
 }
+.fakeLabel {
+  margin: 0.6rem 0 0;
+  font-size: 0.88rem;
+  font-weight: 600;
+}
 .segmented {
   display: inline-flex;
-  margin-top: 0.6rem;
+  flex-wrap: wrap;
+  margin-top: 0.35rem;
   border: 1px solid var(--line);
   border-radius: 10px;
   overflow: hidden;
 }
-.segmented label {
-  position: relative;
-  padding: 0.45rem 0.9rem;
+.segmented button {
+  font: inherit;
   font-weight: 600;
   font-size: 0.9rem;
+  padding: 0.45rem 0.9rem;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
   cursor: pointer;
 }
-.segmented label + label {
+.segmented button + button {
   border-left: 1px solid var(--line);
 }
-.segmented input {
-  position: absolute;
-  opacity: 0;
-  inset: 0;
-  margin: 0;
-  cursor: pointer;
-}
-.segmented label:has(input:checked) {
+.segmented button[aria-pressed="true"] {
   background: linear-gradient(180deg, var(--gold-hi), var(--gold));
   color: var(--gold-ink);
 }
-.segmented label:has(input:focus-visible) {
+.segmented button:focus-visible {
   outline: 3px solid var(--focus);
   outline-offset: -3px;
 }
@@ -290,7 +291,6 @@
   padding: 1rem 1.25rem;
   border-radius: 16px;
   cursor: pointer;
-  font-variant-numeric: tabular-nums;
   color: var(--gold-ink);
   border: 1px solid var(--gold-lo);
   background: linear-gradient(180deg, #ffe6a3 0%, #edbc4c 47%, #d69e2c 53%, #e9b848 100%);

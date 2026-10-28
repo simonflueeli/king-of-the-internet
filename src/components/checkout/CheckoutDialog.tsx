@@ -14,6 +14,7 @@ import { normalizeText, textLength } from "@/lib/normalize";
 import { nextMinCents, titleFor } from "@/lib/pricing";
 import { amountHelp, centsToInput, chipOptions, overpayPercent, parseAmountToCents, type Money } from "@/components/throne/derive";
 import { Crest } from "@/components/throne/Crest";
+import { Tnum } from "@/components/throne/Tnum";
 import { useModalDialog } from "@/components/throne/useModalDialog";
 import { addMyReign } from "@/hooks/useMyReigns";
 import { FALLBACK_LIMITS, pricingOf } from "@/hooks/usePublicConfig";
@@ -31,6 +32,12 @@ const ui = copy.ui;
 
 /** Default of "Email me if someone takes my throne" — an open legal question (PRD); privacy-safe off. */
 const ALERT_DEFAULT = false;
+/**
+ * Releases scheduled by an unmounting sheet, keyed by reservation id. React StrictMode (dev) unmounts and
+ * remounts every component once; the remount cancels the pending release, a real unmount lets it run.
+ */
+const pendingRelease = new Map<string, ReturnType<typeof setTimeout>>();
+
 const QUICK_LABEL = { minimum: "minimum", title: "title", x2: "×2", x5: "×5" } as const;
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -132,9 +139,36 @@ export function CheckoutDialog(props: CheckoutProps) {
 
   // ---- reservation lifecycle ------------------------------------------------------------------
 
+  const releasedRef = useRef(false);
   const release = useCallback((keepalive = false) => {
+    if (releasedRef.current) return;
+    releasedRef.current = true;
     void getApi().then((api) => api.cancelReservation(authRef.current, { keepalive }));
   }, []);
+
+  // Mounted flag for async work (heartbeats, polls, payment calls) that may resolve after unmount.
+  const aliveRef = useRef(false);
+  useEffect(() => {
+    const id = authRef.current.id;
+    aliveRef.current = true;
+    const pending = pendingRelease.get(id);
+    if (pending) clearTimeout(pending);
+    pendingRelease.delete(id);
+    return () => {
+      aliveRef.current = false;
+      // Unmounted without Cancel/Close (e.g. a remount in dev): give the lock back unless a payment is under
+      // way (an authorized card must still be able to finish through the webhook).
+      const p = phaseRef.current;
+      if (p === "submitting" || p === "authorizing" || p === "waiting" || p === "done") return;
+      pendingRelease.set(
+        id,
+        setTimeout(() => {
+          pendingRelease.delete(id);
+          release();
+        }, 100),
+      );
+    };
+  }, [release]);
 
   const close = useCallback(
     (flash: string | null = null) => {
@@ -193,14 +227,21 @@ export function CheckoutDialog(props: CheckoutProps) {
   const { onLock } = props;
   useEffect(() => onLock(expiresAt), [onLock, expiresAt]);
 
+  // Latest callbacks for long-lived timers and subscriptions, so those are set up once and never reset
+  // (throne updates change `finish` and would otherwise restart the heartbeat interval).
+  const latest = useRef({ applyStatus, fail, onClose: props.onClose });
+  useEffect(() => {
+    latest.current = { applyStatus, fail, onClose: props.onClose };
+  });
+
   // Private reservation.result over the live channel.
   const { subscribeResult } = props;
   useEffect(
     () =>
       subscribeResult((r) => {
-        if (r.reservationId === authRef.current.id) applyStatus(r);
+        if (aliveRef.current && r.reservationId === authRef.current.id) latest.current.applyStatus(r);
       }),
-    [subscribeResult, applyStatus],
+    [subscribeResult],
   );
 
   // Heartbeat every 20 s while the reservation is open.
@@ -209,29 +250,32 @@ export function CheckoutDialog(props: CheckoutProps) {
     if (!open) return;
     const id = setInterval(async () => {
       const api = await getApi();
+      if (!aliveRef.current) return;
       const r = await api.heartbeat(authRef.current);
+      if (!aliveRef.current) return;
       if (r.ok) {
         setExpiresAt(Date.parse(r.data.expiresAt));
-        applyStatus(r.data);
+        latest.current.applyStatus(r.data);
       } else if (r.status === 410 || r.status === 401) {
-        if (phaseRef.current === "form") props.onClose(r.status === 410 ? copy.errExpired : ui.errLost);
-        else fail(copy.errExpired, "expired");
+        if (phaseRef.current === "form") latest.current.onClose(r.status === 410 ? copy.errExpired : ui.errLost);
+        else latest.current.fail(copy.errExpired, "expired");
       }
     }, heartbeatMs);
     return () => clearInterval(id);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, heartbeatMs, applyStatus, fail]);
+  }, [open, heartbeatMs]);
 
   // Poll every 2 s while waiting for the result (fallback for the live channel).
+  const waiting = phase === "waiting";
   useEffect(() => {
-    if (phase !== "waiting") return;
+    if (!waiting) return;
     const id = setInterval(async () => {
       const api = await getApi();
+      if (!aliveRef.current) return;
       const r = await api.getReservation(authRef.current);
-      if (r.ok) applyStatus(r.data);
+      if (aliveRef.current && r.ok) latest.current.applyStatus(r.data);
     }, 2000);
     return () => clearInterval(id);
-  }, [phase, applyStatus]);
+  }, [waiting]);
 
   // The lock ran out before paying: close and say so (PRD failure table, 410).
   const lockLeft = expiresAt - props.now;
@@ -352,6 +396,7 @@ export function CheckoutDialog(props: CheckoutProps) {
   // ---- render ---------------------------------------------------------------------------------
 
   const chips = chipOptions(minCents, pricing.maxCents);
+  const payLabel = busy ? ui.coProcessing : fill(ui.coPay, { price: money(shownCents) });
   const procLen = textLength(proclamation);
   const errId = error ? "coError" : undefined;
   const invalidField = (f: Field) => (error?.field === f ? true : undefined);
@@ -450,15 +495,17 @@ export function CheckoutDialog(props: CheckoutProps) {
               }}
             >
               <span className={s.chipLabel}>{c.label}</span>
-              <span className={s.chipAmount}>{money(c.cents, c.cents % 100 === 0)}</span>
+              <span className={s.chipAmount}>
+                <Tnum>{money(c.cents, c.cents % 100 === 0)}</Tnum>
+              </span>
             </button>
           ))}
         </div>
         <p id="amountHelp" className={`${s.amountHelp} ${help.bad ? s.isBad : ""}`} aria-live="polite">
-          {help.text}
+          <Tnum>{help.text}</Tnum>
         </p>
         <p id="lockline" className={s.lockline}>
-          {lockText}
+          <Tnum>{lockText}</Tnum>
         </p>
 
         <label className={s.field} htmlFor="nameInput">
@@ -494,7 +541,7 @@ export function CheckoutDialog(props: CheckoutProps) {
           disabled={busy}
         />
         <div id="msgCount" className={s.count}>
-          {fill(ui.coCount, { n: procLen, max: procMax })}
+          <Tnum>{fill(ui.coCount, { n: procLen, max: procMax })}</Tnum>
         </div>
 
         <label className={s.field} htmlFor="emailInput">
@@ -513,28 +560,40 @@ export function CheckoutDialog(props: CheckoutProps) {
           disabled={busy}
         />
 
-        <label className={s.check}>
-          <input type="checkbox" checked={alertOptIn} onChange={(e) => setAlertOptIn(e.target.checked)} disabled={busy} />
-          <span>{ui.coAlert}</span>
-        </label>
-        <label className={s.check}>
+        <div className={s.check}>
+          <input
+            id="alertInput"
+            type="checkbox"
+            checked={alertOptIn}
+            onChange={(e) => setAlertOptIn(e.target.checked)}
+            aria-labelledby="alertLabel"
+            disabled={busy}
+          />
+          <label id="alertLabel" htmlFor="alertInput">
+            {ui.coAlert}
+          </label>
+        </div>
+        <div className={s.check}>
           <input
             ref={termsRef}
+            id="termsInput"
             type="checkbox"
             required
             checked={terms}
             onChange={(e) => setTerms(e.target.checked)}
+            aria-labelledby="termsLabel"
             aria-invalid={invalidField("terms")}
+            aria-describedby={error?.field === "terms" ? errId : undefined}
             disabled={busy}
           />
-          <span>
+          <label id="termsLabel" htmlFor="termsInput">
             {ui.coTermsBefore}
             <a href="/legal/terms" target="_blank" rel="noopener">
               {ui.coTermsLink}
             </a>
             {ui.coTermsAfter}
-          </span>
-        </label>
+          </label>
+        </div>
 
         <fieldset className={s.payment} disabled={busy}>
           <legend>{ui.coPaymentLegend}</legend>
@@ -551,12 +610,14 @@ export function CheckoutDialog(props: CheckoutProps) {
                 {ui.fakeHeading}
               </h3>
               <p className={s.paymentNote}>{ui.fakeIntro}</p>
-              <div className={s.segmented} role="radiogroup" aria-label={ui.fakeOutcome}>
+              <p id="fakeOutcomeLabel" className={s.fakeLabel}>
+                {ui.fakeOutcome}
+              </p>
+              <div className={s.segmented} role="group" aria-labelledby="fakeOutcomeLabel">
                 {(["succeed", "decline"] as const).map((o) => (
-                  <label key={o}>
-                    <input type="radio" name="fakeOutcome" value={o} checked={outcome === o} onChange={() => setOutcome(o)} />
-                    {o === "succeed" ? ui.fakeSucceed : ui.fakeDecline}
-                  </label>
+                  <button key={o} type="button" aria-pressed={outcome === o} onClick={() => setOutcome(o)}>
+                    {o === "succeed" ? ui.fakeSucceedLong : ui.fakeDeclineLong}
+                  </button>
                 ))}
               </div>
             </div>
@@ -569,8 +630,8 @@ export function CheckoutDialog(props: CheckoutProps) {
           </p>
         )}
         <div className={s.actions}>
-          <button type="submit" className={s.payBtn} disabled={busy || help.bad}>
-            {busy ? ui.coProcessing : fill(ui.coPay, { price: money(shownCents) })}
+          <button type="submit" className={s.payBtn} disabled={busy || help.bad} aria-label={payLabel}>
+            <Tnum>{payLabel}</Tnum>
           </button>
           <button type="button" className={s.btnSecondary} onClick={() => close()} disabled={busy}>
             {ui.coCancel}

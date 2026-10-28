@@ -7,6 +7,7 @@ import type { PricingConfig } from "@/lib/pricing";
 import { Crest } from "./Crest";
 import type { Money } from "./derive";
 import s from "./throne.module.css";
+import { Tnum } from "./Tnum";
 
 const ui = copy.ui;
 const REMOVED: ReadonlySet<string> = new Set(["removed", "refunded", "disputed"]);
@@ -22,7 +23,9 @@ function RecordCard({ label, reign, value, idPrefix }: { label: string; reign: R
       <div>
         <p className={s.recordLabel}>{label}</p>
         <p className={s.recordWho}>{fill(copy.hallName, { title: reign.title, name: reign.name })}</p>
-        <p className={s.recordWhat}>{value}</p>
+        <p className={s.recordWhat}>
+          <Tnum>{value}</Tnum>
+        </p>
       </div>
     </div>
   );
@@ -83,8 +86,12 @@ export function HallOfKings({ throne, state, now, money, pricing }: { throne: Th
                     <span className={s.rTitle}>{r.title} </span>
                     {r.name}
                   </span>
-                  <span className={s.rPaid}>{money(r.paidCents)}</span>
-                  <span className={s.rTime}>{time}</span>
+                  <span className={s.rPaid}>
+                    <Tnum>{money(r.paidCents)}</Tnum>
+                  </span>
+                  <span className={s.rTime}>
+                    <Tnum>{time}</Tnum>
+                  </span>
                 </li>
               );
             })}

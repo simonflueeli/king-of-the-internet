@@ -202,8 +202,8 @@ const ui = {
   fakeHeading: "Test payment",
   fakeIntro: "This server runs without real payments. No card is charged and no money moves.",
   fakeOutcome: "Test card result",
-  fakeSucceed: "Succeed",
-  fakeDecline: "Decline",
+  fakeSucceedLong: "Test card succeeds",
+  fakeDeclineLong: "Test card is declined",
 
   // Coronation
   coronationKicker: "Long live",

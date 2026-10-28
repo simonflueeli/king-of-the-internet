@@ -5,6 +5,7 @@ import { track } from "@/lib/analytics";
 import { copy, fill } from "@/lib/copy";
 import type { Title } from "@/lib/contracts";
 import { Crest } from "@/components/throne/Crest";
+import { Tnum } from "@/components/throne/Tnum";
 import s from "./checkout.module.css";
 
 const ui = copy.ui;
@@ -88,7 +89,9 @@ export function Coronation(props: {
       <h2 className={s.doneName} id="doneTitle">
         {fill(copy.hallName, { title, name })}
       </h2>
-      <p className={s.doneText}>{fill(ui.coronationPaid, { price: props.paid, throneLabel: props.throneLabel, next: props.next })}</p>
+      <p className={s.doneText}>
+        <Tnum>{fill(ui.coronationPaid, { price: props.paid, throneLabel: props.throneLabel, next: props.next })}</Tnum>
+      </p>
       <div className={s.brag}>
         <p>{brag}</p>
         <a className={s.reignLink} href={reignUrl}>

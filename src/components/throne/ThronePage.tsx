@@ -109,6 +109,11 @@ export function ThronePage({ throne, initial }: { throne: ThroneId; initial: Thr
       try {
         const api = await getApi();
         const r = await api.createReservation(throne, source);
+        if (!aliveRef.current) {
+          // The page went away while the request was in flight: give the lock straight back.
+          if (r.ok) void api.cancelReservation({ id: r.data.reservationId, token: r.data.reservationToken });
+          return;
+        }
         if (r.ok) {
           addOwnLock(Date.parse(r.data.expiresAt));
           setCheckout({ reservation: r.data, source, prefillName, kingWasMine: isMine(state.king?.id) });
@@ -140,16 +145,39 @@ export function ThronePage({ throne, initial }: { throne: ThroneId; initial: Thr
     [showFlash],
   );
 
-  // Analytics page view, and the reclaim link (`?checkout=1&name=…`) opening checkout with the old name.
+  const aliveRef = useRef(false);
   useEffect(() => {
+    aliveRef.current = true;
+    return () => {
+      aliveRef.current = false;
+    };
+  }, []);
+
+  // Analytics page view (once per page, even under StrictMode's double mount).
+  const viewTracked = useRef(false);
+  useEffect(() => {
+    if (viewTracked.current) return;
+    viewTracked.current = true;
     track("page_view", { throne, referrer: referrerType() });
+  }, [throne]);
+
+  // The reclaim link (`?checkout=1&name=…`, PRD journey 4) opens checkout with the old name. The params are
+  // read once and kept in a ref, so a StrictMode remount (which cancels the first timer) still opens it.
+  const reclaim = useRef<{ name: string } | null>(null);
+  useEffect(() => {
     const url = new URL(window.location.href);
-    if (url.searchParams.get("checkout") !== "1") return;
-    const name = url.searchParams.get("name") ?? "";
-    url.searchParams.delete("checkout");
-    url.searchParams.delete("name");
-    window.history.replaceState(null, "", url.pathname + url.search + url.hash);
-    const t = setTimeout(() => void openCheckout("reclaim", name), 0);
+    if (url.searchParams.get("checkout") === "1") {
+      reclaim.current = { name: url.searchParams.get("name") ?? "" };
+      url.searchParams.delete("checkout");
+      url.searchParams.delete("name");
+      window.history.replaceState(window.history.state, "", url.pathname + url.search + url.hash);
+    }
+    if (!reclaim.current) return;
+    const t = setTimeout(() => {
+      const r = reclaim.current;
+      reclaim.current = null;
+      if (r) void openCheckout("reclaim", r.name);
+    }, 0);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
