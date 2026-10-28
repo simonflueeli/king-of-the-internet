@@ -66,5 +66,24 @@ const safety = {} as const;
 /** G: growth, email, share and legal strings. */
 const growth = {} as const;
 
-export const copy = { ...shared, ui, safety, growth } as const;
+/** C: core API messages (reservations, payments) beyond the shared failure messages above. */
+const core = {
+  errUnknownThrone: "There is no such throne.",
+  errNotFound: "That reservation doesn’t exist.",
+  errBadToken: "This checkout belongs to another browser. Open checkout again.",
+  errBanned: "You can’t take the throne.",
+  errPriceCap: "The throne has reached the maximum price.",
+  errCompleted: "This reservation has already been paid.",
+  errPaymentInProgress: "Your payment is already being processed.",
+  errPaymentUnavailable: "Payments are unavailable right now. Try again in a few minutes. You weren’t charged.",
+  errTerms: "Please accept the terms to continue.",
+  errEmail: "Enter a valid email address.",
+  errName: "Enter a name of 1 to {max} characters.",
+  errProclamation: "The proclamation can have at most {max} characters.",
+  errBadRequest: "The request is invalid.",
+  errNotFakeMode: "Not found.",
+  errUnauthorized: "Unauthorized.",
+} as const;
+
+export const copy = { ...shared, ui, safety, growth, core } as const;
 export type Copy = typeof copy;

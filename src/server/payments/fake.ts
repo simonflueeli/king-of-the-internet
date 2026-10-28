@@ -27,7 +27,15 @@ export class FakePaymentProvider implements PaymentProvider {
     return intent;
   }
 
+  /** The intent created for a reservation (tests, dev tooling). */
+  forReservation(reservationId: string): FakeIntent | undefined {
+    return [...this.intents.values()].find((i) => i.metadata.reservationId === reservationId);
+  }
+
   async createIntent(p: { amountCents: number; reservationId: string; throne: string }) {
+    // Same reservation → same intent, like Stripe's `create-${reservationId}` idempotency key.
+    const existing = this.forReservation(p.reservationId);
+    if (existing) return { id: existing.id, clientSecret: existing.clientSecret };
     const id = `fake_pi_${randomToken(12)}`;
     const clientSecret = `fake_${id}_secret_${randomToken(12)}`;
     this.intents.set(id, {
@@ -69,7 +77,11 @@ export class FakePaymentProvider implements PaymentProvider {
   /** Simulate a declined card (Stripe: payment_intent.payment_failed). The intent stays usable. */
   decline(id: string, message = "Your card was declined."): FakeIntent {
     const intent = this.get(id);
+    if (intent.status === "canceled" || intent.status === "succeeded") {
+      throw new Error(`cannot decline a ${intent.status} intent`);
+    }
     intent.status = "requires_payment_method";
+    intent.amountCapturable = 0;
     intent.lastError = message;
     return intent;
   }
